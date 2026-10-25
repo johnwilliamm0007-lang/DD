@@ -12,6 +12,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800&display=swap" rel="stylesheet">
 <title>دومنو</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:#0f4a35;color:#fff;font-family:system-ui,"Segoe UI",Tahoma,sans-serif;overflow:hidden}
@@ -268,6 +270,7 @@ html,body{background:#061430}
     <button onclick="startBot()">العب ضد الكمبيوتر</button>
     <button class="g" onclick="netUI('host')">افتح غرفة (هوست)</button>
     <button class="g" onclick="netUI('guest')">انضم لغرفة</button>
+    <button class="g hide" id="inst" onclick="installApp()">📲 ثبّت اللعبة</button>
     <p style="font-size:12px;opacity:.7">اللعب مع صاحبك: تبعتوا لبعض كود نسخ ولصق مرة واحدة بس. الأفضل تكونوا على نفس الواي فاي.</p>
     <p style="font-size:14px;font-weight:700;margin:10px 0 0;color:#ffe08a">تم إنشاء اللعبة بواسطة مينا عاطف</p>
   </div>
@@ -291,6 +294,12 @@ html,body{background:#061430}
 const $=s=>document.querySelector(s);
 const PIPS={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 const TARGET=100, TURN=25;
+// ---------- تثبيت كتطبيق (PWA) ----------
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+let dip=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;$('#inst').classList.remove('hide')});
+addEventListener('appinstalled',()=>$('#inst').classList.add('hide'));
+function installApp(){if(dip){dip.prompt();dip=null;$('#inst').classList.add('hide')}}
 // ---------- شاشة كاملة + عرض ----------
 let fsAuto=false;
 function isFull(){return !!(document.fullscreenElement||document.webkitFullscreenElement)}
@@ -548,7 +557,7 @@ async function netUI(role){
     $('#n2').textContent='2) لما يرد عليك، الصق رسالته هنا واضغط تأكيد';
     ch=pc.createDataChannel('d');hook();
     await pc.setLocalDescription(await pc.createOffer());await waitIce();
-    $('#out').value=BASE+'#o'+await enc(pc.localDescription);
+    $('#out').value=linkBase()+'#o'+await enc(pc.localDescription);
   }else{
     $('#nt').textContent='انضم لغرفة';
     $('#n1').textContent='1) الصق لينك صاحبك واضغط تأكيد';
@@ -560,7 +569,7 @@ const tok=s=>{const m=s.match(/#?([oa][A-Za-z0-9_\-]{100,})/);return m&&m[1]};
 async function guestAnswer(d){
   await pc.setRemoteDescription(d);
   await pc.setLocalDescription(await pc.createAnswer());await waitIce();
-  $('#out').value=BASE+'#a'+await enc(pc.localDescription);
+  $('#out').value=linkBase()+'#a'+await enc(pc.localDescription);
 }
 async function applyIn(){
   try{
