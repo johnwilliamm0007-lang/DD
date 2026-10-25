@@ -99,6 +99,18 @@ button{font-weight:700;font-size:16px}
 @keyframes glow{0%,100%{box-shadow:0 0 0 2px rgba(127,227,255,.55),0 0 12px rgba(127,227,255,.45),0 6px 10px rgba(0,0,0,.55)}50%{box-shadow:0 0 0 2px rgba(127,227,255,.95),0 0 26px rgba(127,227,255,.85),0 6px 10px rgba(0,0,0,.55)}}
 #hand .t.ok{outline:none;transform:translateY(-10px);animation:glow 1.7s ease-in-out infinite}
 #hand .t.sel{box-shadow:0 0 0 3px #fff,0 0 26px rgba(255,255,255,.7);animation:none}
+/* ===== سلاسة الحركة + اختيار الجهة على الطاولة ===== */
+#board{scroll-behavior:smooth}
+.t{will-change:transform}
+@keyframes dropIn{0%{transform:translateY(-34px) scale(1.3) rotate(-7deg);opacity:0}60%{opacity:1}100%{transform:none;opacity:1}}
+.t.new{animation:dropIn .34s cubic-bezier(.2,.9,.3,1.15)}
+@keyframes rise{from{transform:translateY(0)}}
+#hand .t.ok{animation:rise .3s ease-out,glow 1.7s ease-in-out infinite}
+#hand .t:active{transform:scale(.96)}
+@keyframes zpulse{0%,100%{box-shadow:0 0 0 0 rgba(127,227,255,.55)}50%{box-shadow:0 0 0 10px rgba(127,227,255,0)}}
+@keyframes zin{from{transform:scale(.6);opacity:0}}
+.zone{flex:none;width:58px;height:58px;border-radius:14px;border:2px dashed #7fe3ff;background:rgba(127,227,255,.14);color:#aeeeff;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;animation:zin .22s ease-out,zpulse 1.4s ease-out infinite}
+.zone:active{background:rgba(127,227,255,.35)}
 </style>
 </head>
 <body>
@@ -114,6 +126,7 @@ button{font-weight:700;font-size:16px}
   <div id="hand"></div>
 </div>
 
+<button class="g" id="snd" onclick="mute=!mute;this.textContent=mute?'🔇':'🔊'" style="position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));padding:6px 12px;z-index:4;font-size:18px">🔊</button>
 <div id="menu">
   <div class="card">
     <h2>🁣 دومنو 1 ضد 1</h2>
@@ -199,14 +212,67 @@ const view=p=>({hand:g.h[p],opp:g.h[1-p].length,by:g.by.length,board:g.board,cur
 function push(){render(view(0));if(mode==='host'&&ch&&ch.readyState==='open')ch.send(JSON.stringify({t:'s',v:view(1)}))}
 // ---------- الواجهة ----------
 let V=null,sel=null,tk='',tleft=TURN,tint=null;
+// ---------- الصوت (متولّد بـ WebAudio بدون ملفات) ----------
+let AC,mute=false,lastB=-1,lastRd=0,lastBy=-1,lastRw=-1;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC}
+document.addEventListener('pointerdown',ac);
+function clack(vol=1,when=0,pitch=1){
+  const a=ac();if(!a||mute)return;const t=a.currentTime+when;
+  [[1,1],[2,.25]].forEach(([m,k])=>{
+    const o=a.createOscillator(),g=a.createGain();
+    o.type='sine';o.frequency.value=587*pitch*m;
+    g.gain.setValueAtTime(.0001,t);
+    g.gain.exponentialRampToValueAtTime(.07*vol*k,t+.012);
+    g.gain.exponentialRampToValueAtTime(.0001,t+.3);
+    o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+.32);
+  });
+}
+function clackOld(vol=1,when=0,pitch=1){
+  const a=ac();if(!a||mute)return;const t=a.currentTime+when;
+  const len=Math.floor(a.sampleRate*.06),buf=a.createBuffer(1,len,a.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,4);
+  const n=a.createBufferSource();n.buffer=buf;
+  const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=2200*pitch;f.Q.value=.9;
+  const g=a.createGain();g.gain.value=.9*vol;
+  n.connect(f);f.connect(g);g.connect(a.destination);n.start(t);
+  const o=a.createOscillator(),og=a.createGain();o.type='sine';
+  o.frequency.setValueAtTime(190*pitch,t);o.frequency.exponentialRampToValueAtTime(70,t+.07);
+  og.gain.setValueAtTime(.7*vol,t);og.gain.exponentialRampToValueAtTime(.001,t+.09);
+  o.connect(og);og.connect(a.destination);o.start(t);o.stop(t+.1);
+}
+function shuffleSnd(){[0,4,7,12].forEach((s,i)=>clack(.5,i*.1,Math.pow(2,s/12)*.75))}
+function chime(win){
+  const a=ac();if(!a||mute)return;
+  (win?[523,659,784,1047]:[392,330]).forEach((f,i)=>{
+    const t=a.currentTime+i*.14,o=a.createOscillator(),g=a.createGain();
+    o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.25,t);g.gain.exponentialRampToValueAtTime(.001,t+.35);
+    o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+.4);
+  });
+}
+function sfx(v){
+  if(v.rd!==lastRd){lastRd=v.rd;lastB=v.board.length;lastBy=v.by;lastRw=-1;shuffleSnd()}
+  else{
+    if(v.board.length>lastB)clack();
+    else if(v.by<lastBy)clack(.4,0,1.3);
+    lastB=v.board.length;lastBy=v.by;
+  }
+  if(v.rw>=0&&lastRw<0){lastRw=v.rw;chime(v.rw===v.me)}
+}
 function render(v){
-  V=v;const m=v.me;
+  sfx(v);V=v;const m=v.me;
   const mine=v.sc[m],theirs=v.sc[1-m];
   $('#score').textContent=`أنت ${mine} : ${theirs} الخصم  (حتى ${TARGET})`;
   $('#info').textContent=`الجولة ${v.rd} · البوكس ${v.by}`;
   $('#opp').innerHTML='<span class="back"></span>'.repeat(v.opp);
   const bin=$('#bin');bin.innerHTML='';
-  v.board.forEach(t=>bin.appendChild(tileEl(t,t[0]==t[1])));
+  const pb=window._pb||[];let ni=-1;
+  if(v.rd===window._pr&&v.board.length>pb.length)ni=(!pb[0]||v.board[0][0]!==pb[0][0]||v.board[0][1]!==pb[0][1])?0:v.board.length-1;
+  window._pb=v.board.map(t=>t.slice());window._pr=v.rd;
+  const zone=(s,c)=>{const z=document.createElement('div');z.className='zone';z.textContent=c;z.onclick=()=>go(s);return z};
+  const two=sel&&v.cur===m&&v.rw<0&&v.board.length&&v.hand.some(x=>x[0]==sel[0]&&x[1]==sel[1])&&sidesFor(sel).length===2;
+  if(two)bin.appendChild(zone(0,'◀'));
+  v.board.forEach((t,i)=>{const e=tileEl(t,t[0]==t[1]);if(i===ni)e.classList.add('new');bin.appendChild(e)});
+  if(two)bin.appendChild(zone(1,'▶'));
   const b=$('#board');b.scrollLeft=(b.scrollWidth-b.clientWidth)/2;
   const hand=$('#hand');hand.innerHTML='';
   const myTurn=v.cur===m&&v.rw<0;
@@ -235,10 +301,9 @@ function pick(t){
   if(!V||V.cur!==V.me||V.rw>=0)return;
   const s=sidesFor(t);if(!s.length)return;
   if(s.length===1||!V.board.length){act(V.me,'play',t,s[0]);return}
-  sel=t;render(V);
-  $('#sides').innerHTML='<button onclick="go(0)">⬅ يسار</button> <button onclick="go(1)">يمين ➡</button>';
+  sel=(sel&&sel[0]==t[0]&&sel[1]==t[1])?null:t;render(V);
 }
-function go(s){act(V.me,'play',sel,s);sel=null}
+function go(s){const t=sel;sel=null;if(t)act(V.me,'play',t,s)}
 function auto(){
   for(const t of V.hand){const s=sidesFor(t);if(s.length){act(V.me,'play',t,s[0]);return}}
   act(V.me,'draw');
