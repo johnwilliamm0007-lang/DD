@@ -19,188 +19,84 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:#0f4a35;color:#fff;font-family:system-ui,"Segoe UI",Tahoma,sans-serif;overflow:hidden}
-#app{height:100%;display:flex;flex-direction:column;background:radial-gradient(circle at 50% 40%,#1b7a58,#0f4a35 80%);padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom)}
+html,body{margin:0;height:100%;background:#061430;color:#fff;font-family:'Cairo','Segoe UI',Tahoma,system-ui,sans-serif;overflow:hidden}
+button,textarea,input{font-family:inherit}
+#app{height:100vh;height:100dvh;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom);
+ background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+ radial-gradient(ellipse 85% 70% at 50% 42%,#1a417c 0%,#112f61 40%,#0a2147 70%,#050f26 100%)}
 .top{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;gap:8px}
-.pill{background:rgba(0,0,0,.35);border:1px solid rgba(255,215,100,.4);border-radius:14px;padding:6px 12px;font-weight:700;font-size:14px}
+.pill{background:rgba(5,15,38,.55);border:1.5px solid rgba(255,214,102,.55);border-radius:14px;padding:6px 12px;font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
 .opp{text-align:center}
-.back{display:inline-block;width:14px;height:34px;margin:0 2px;background:#1c2530;border-radius:3px;border:1px solid #000}
-#board{flex:1;display:flex;align-items:center;overflow-x:auto;direction:ltr;padding:10px}
-#board .in{display:flex;align-items:center;margin:0 auto;gap:2px}
-.t{display:flex;background:#f6f1e4;border-radius:7px;border:1px solid #8a8570;box-shadow:0 2px 4px rgba(0,0,0,.4);flex:none;direction:ltr}
+#oppname{font-weight:700;margin-bottom:4px;color:#e6efff}
+.back{display:inline-block;width:18px;height:40px;margin:0 3px;background:#1c3a6e;border-radius:5px;border:1px solid #12284d}
+/* ===== الطاولة ===== */
+#board{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;direction:ltr;padding:10px}
+.t{position:relative;display:flex;background:#e4e0d4;border:1px solid #cbc5b3;border-radius:10px;box-shadow:0 3px 8px rgba(0,0,0,.35);flex:none;direction:ltr}
 .t.v{flex-direction:column}
-.h{width:34px;height:34px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:4px}
-.h+.h{border-left:1px solid #9b957f}
-.t.v .h+.h{border-left:0;border-top:1px solid #9b957f}
-.d{width:6px;height:6px;border-radius:50%;background:#111;margin:auto}
-#hand{display:flex;justify-content:center;gap:6px;padding:8px 0;flex-wrap:wrap;direction:ltr}
-#hand .t{transform:rotate(0);cursor:pointer;transition:.15s}
-#hand .t .h{width:34px;height:34px}
-#hand .t{flex-direction:column}
-#hand .t .h+.h{border-left:0;border-top:1px solid #9b957f}
-#hand .t.ok{outline:3px solid #ffd54a;transform:translateY(-8px)}
-#hand .t.sel{outline:3px solid #fff}
-.bar{display:flex;justify-content:center;gap:10px;padding:8px;min-height:54px;align-items:center;flex-wrap:wrap}
-button{font:inherit;font-weight:700;background:#ffd54a;color:#222;border:0;border-radius:12px;padding:10px 18px}
-button.g{background:rgba(0,0,0,.4);color:#fff;border:1px solid rgba(255,255,255,.3)}
-#msg{text-align:center;min-height:22px;font-weight:700;color:#ffe79a}
-.ring{width:42px;height:42px;border-radius:50%;border:3px solid #5be3a0;display:flex;align-items:center;justify-content:center;font-weight:800}
-.ring.low{border-color:#ff6b6b}
-#menu,#net{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:20px;z-index:5}
-.card{background:#16372b;border:1px solid rgba(255,215,100,.4);border-radius:18px;padding:22px;max-width:420px;width:100%;text-align:center}
-.card h2{margin:0 0 14px}
-.card button{display:block;width:100%;margin:8px 0}
-textarea{width:100%;height:90px;border-radius:10px;border:0;padding:8px;direction:ltr;font-size:11px}
-.hide{display:none!important}
-/* ===== تصميم جديد: أزرق فاتح ===== */
-html,body{background:#9fd3f7;color:#0b2a4a}
-#app{background:radial-gradient(900px 500px at 50% 0%,rgba(255,255,255,.75),transparent 70%),linear-gradient(165deg,#d9f0ff 0%,#a5d6f8 50%,#6db4ea 100%);padding-left:12px;padding-right:12px}
-.pill{background:rgba(255,255,255,.6);color:#0b2a4a;border:1px solid rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(20,80,140,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-#oppname{color:#0b2a4a}
-.back{width:18px;height:40px;border-radius:5px;border:1px solid #0b2a4a;background:linear-gradient(145deg,#3a73b3,#123a6b);box-shadow:inset 0 0 0 2px rgba(255,255,255,.18),0 2px 4px rgba(0,0,0,.3)}
-#board{background:linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,.18));border:1px solid rgba(255,255,255,.85);border-radius:26px;box-shadow:inset 0 6px 18px rgba(30,100,170,.18),0 8px 24px rgba(20,80,140,.15);margin:4px 0}
-.t{position:relative;border-radius:10px;border:1px solid #a9a287;background:linear-gradient(160deg,#fffdf5 0%,#f3ecd8 60%,#e4dcc3 100%);box-shadow:0 1px 0 #fff inset,0 -3px 0 rgba(0,0,0,.08) inset,0 5px 10px rgba(10,50,100,.35)}
-.t::after{content:'';position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffeeb5,#b8862b);box-shadow:0 1px 2px rgba(0,0,0,.5);z-index:2}
-.h{width:38px;height:38px;padding:6px}
-.h+.h{border-left:2px solid #c3bca2}
-.t.v .h+.h,#hand .t .h+.h{border-left:0;border-top:2px solid #c3bca2}
-#hand .t .h{width:40px;height:40px}
-.d{width:8px;height:8px;background:radial-gradient(circle at 35% 30%,#555,#050505 65%);box-shadow:0 1px 1px rgba(255,255,255,.7)}
-#hand{gap:7px;padding:14px 0 10px}
-#hand .t{transition:transform .18s,box-shadow .18s}
-#hand .t.ok{outline:none;transform:translateY(-12px);box-shadow:0 0 0 3px #ff9f1c,0 12px 20px rgba(255,140,0,.45)}
-#hand .t.sel{outline:none;transform:translateY(-16px);box-shadow:0 0 0 3px #1e6fd9,0 12px 20px rgba(30,111,217,.5)}
-#msg{color:#0b3d73;font-size:17px;text-shadow:0 1px 0 rgba(255,255,255,.7)}
-button{background:linear-gradient(180deg,#3b8cf0,#1457b3);color:#fff;border-radius:14px;padding:11px 20px;box-shadow:0 4px 0 #0e3f82,0 8px 14px rgba(20,80,160,.35)}
-button:active{transform:translateY(2px);box-shadow:0 2px 0 #0e3f82}
-button.g{background:rgba(255,255,255,.75);color:#0b2a4a;border:1px solid #fff;box-shadow:0 4px 0 rgba(20,80,140,.25),0 8px 14px rgba(20,80,160,.2)}
-.ring{background:#fff;color:#0b2a4a;border:4px solid #3b8cf0;box-shadow:0 4px 10px rgba(20,80,160,.25)}
-.ring.low{border-color:#ff5d5d;color:#d62f2f}
-#menu,#net{background:rgba(40,100,170,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-.card{background:rgba(255,255,255,.92);color:#0b2a4a;border:1px solid #fff;border-radius:24px;box-shadow:0 20px 50px rgba(10,50,100,.35)}
-.card h2{font-size:24px}
-textarea{border:1px solid #b9d6ee;background:#f4faff;color:#0b2a4a}
-/* ===== كحلي ===== */
-html,body{background:#0a1a33;color:#fff}
-#app{background:radial-gradient(900px 500px at 50% 0%,rgba(70,120,210,.35),transparent 70%),linear-gradient(165deg,#12305c 0%,#0b2147 50%,#06142d 100%)}
-.pill{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(140,180,255,.35);box-shadow:0 4px 14px rgba(0,0,0,.35)}
-#oppname{color:#e6efff}
-.back{border-color:#000;background:linear-gradient(145deg,#2f5fa8,#14305c)}
-#board{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(140,180,255,.3);box-shadow:inset 0 6px 18px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35)}
-.t{box-shadow:0 1px 0 #fff inset,0 -3px 0 rgba(0,0,0,.08) inset,0 5px 10px rgba(0,0,0,.6)}
-#msg{color:#ffe08a;text-shadow:none}
-button.g{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(140,180,255,.4);box-shadow:0 4px 0 rgba(0,0,0,.35)}
-.ring{background:#0b2147;color:#fff;border-color:#4d9bff;box-shadow:0 4px 10px rgba(0,0,0,.4)}
-.ring.low{border-color:#ff5d5d;color:#ff8a8a}
-#menu,#net{background:rgba(3,10,25,.7)}
-.card{background:rgba(14,36,74,.95);color:#fff;border:1px solid rgba(140,180,255,.35);box-shadow:0 20px 50px rgba(0,0,0,.6)}
-textarea{background:#0b2147;color:#dbe8ff;border:1px solid #2a4f8a}
-/* ===== خط ومسافات وتوهج ===== */
-html,body,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,system-ui,sans-serif}
-.pill{font-weight:700;font-size:15px;letter-spacing:.2px}
-#msg{font-weight:800;font-size:18px}
-.card h2{font-weight:800}
-button{font-weight:700;font-size:16px}
-#bin{gap:6px!important}
-.back{margin:0 3px}
-#hand{gap:clamp(9px,2.8vw,20px);padding:18px 6px 12px}
-#hand .t .h{width:38px;height:38px}
-@keyframes glow{0%,100%{box-shadow:0 0 0 2px rgba(127,227,255,.55),0 0 12px rgba(127,227,255,.45),0 6px 10px rgba(0,0,0,.55)}50%{box-shadow:0 0 0 2px rgba(127,227,255,.95),0 0 26px rgba(127,227,255,.85),0 6px 10px rgba(0,0,0,.55)}}
-#hand .t.ok{outline:none;transform:translateY(-10px);animation:glow 1.7s ease-in-out infinite}
-#hand .t.sel{box-shadow:0 0 0 3px #fff,0 0 26px rgba(255,255,255,.7);animation:none}
-/* ===== سلاسة الحركة + اختيار الجهة على الطاولة ===== */
-#board{scroll-behavior:smooth}
-.t{will-change:transform}
+.t::after{content:'';position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#b3ab95;z-index:2}
+.h{width:38px;height:38px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:6px}
+.h+.h{border-left:2px solid #c8c2af}
+.t.v .h+.h,#hand .t .h+.h{border-left:0;border-top:2px solid #c8c2af}
+.d{width:8px;height:8px;border-radius:50%;background:#2b303b;margin:auto}
 @keyframes dropIn{0%{transform:translateY(-34px) scale(1.3) rotate(-7deg);opacity:0}60%{opacity:1}100%{transform:none;opacity:1}}
 .t.new{animation:dropIn .34s cubic-bezier(.2,.9,.3,1.15)}
-@keyframes rise{from{transform:translateY(0)}}
-#hand .t.ok{animation:rise .3s ease-out,glow 1.7s ease-in-out infinite}
-#hand .t:active{transform:scale(.96)}
-@keyframes zpulse{0%,100%{box-shadow:0 0 0 0 rgba(127,227,255,.55)}50%{box-shadow:0 0 0 10px rgba(127,227,255,0)}}
+/* ترتيب الثعبان */
+#bin .sn{position:absolute;left:0;top:0;transform-origin:0 0}
+#bin .sn>*{position:absolute;margin:0}
+#bin .h{width:var(--S)!important;height:var(--S)!important}
+.zone{flex:none;border-radius:14px;border:2px dashed #a9c8ff;background:rgba(169,200,255,.1);color:#d6e6ff;display:none;align-items:center;justify-content:center;font-size:24px;cursor:pointer}
+#bin .sn>.zone{display:flex;animation:zin .22s ease-out}
+.zone:active{background:rgba(169,200,255,.35)}
 @keyframes zin{from{transform:scale(.6);opacity:0}}
-.zone{flex:none;width:58px;height:58px;border-radius:14px;border:2px dashed #7fe3ff;background:rgba(127,227,255,.14);color:#aeeeff;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;animation:zin .22s ease-out,zpulse 1.4s ease-out infinite}
-.zone:active{background:rgba(127,227,255,.35)}
+/* ===== الإيد ===== */
+#hand{display:flex;justify-content:center;gap:clamp(9px,2.8vw,20px);padding:18px 6px 12px;flex-wrap:wrap;direction:ltr}
+#hand .t{flex-direction:column;cursor:pointer;transition:transform .18s,box-shadow .18s}
+#hand .t:active{transform:scale(.96)}
+#hand .t.ok{transform:translateY(-8px);box-shadow:0 0 0 2px rgba(255,224,102,.9),0 0 14px rgba(255,224,102,.55),0 6px 12px rgba(0,0,0,.4)}
+#hand .t.sel{transform:translateY(-10px);box-shadow:0 0 0 2px #fff,0 0 16px rgba(255,255,255,.6),0 6px 12px rgba(0,0,0,.4)}
+#hand .t.new{animation:dropIn .4s cubic-bezier(.2,.9,.3,1.15)}
+.bar{display:flex;justify-content:center;gap:10px;padding:8px;min-height:54px;align-items:center;flex-wrap:wrap}
+#msg{text-align:center;min-height:22px;font-weight:800;font-size:18px;color:#ffe08a}
+.ring{width:42px;height:42px;border-radius:50%;background:#0b2147;color:#fff;border:4px solid #4d9bff;display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:0 4px 10px rgba(0,0,0,.4)}
+.ring.low{border-color:#ff5d5d;color:#ff8a8a}
+button{font-weight:700;font-size:16px;background:linear-gradient(180deg,#3b8cf0,#1457b3);color:#fff;border:0;border-radius:14px;padding:11px 20px;box-shadow:0 4px 0 #0e3f82,0 8px 14px rgba(20,80,160,.35)}
+button:active{transform:translateY(2px);box-shadow:0 2px 0 #0e3f82}
+button.g{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(140,180,255,.4);box-shadow:0 4px 0 rgba(0,0,0,.35)}
+.hide{display:none!important}
+.credit{text-align:center;font-size:12px;font-weight:700;color:#cfe0ff;opacity:.7;padding:2px 0 6px}
+.card{background:#0b2147;color:#fff;border:1px solid #1c4180;border-radius:24px;padding:22px;max-width:420px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.55)}
+.card h2{margin:0 0 14px;font-size:24px;font-weight:800}
+.card>button{display:block;width:100%;margin:8px 0}
+/* ===== قائمة البداية ===== */
+#menu{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:20px;
+ background:radial-gradient(circle,rgba(255,255,255,.07) 2px,transparent 2.6px) 0 0/34px 34px,radial-gradient(ellipse 80% 65% at 50% 38%,#1d4a8c 0%,#0e2a5a 55%,#050f26 100%)}
+.mn{display:flex;flex-direction:column;align-items:center;gap:22px;width:min(92vw,390px)}
+.hero{text-align:center}
+.fan{display:flex;justify-content:center;align-items:flex-end;height:150px;margin-bottom:6px}
+.fan .t{margin:0 -4px;transform-origin:50% 100%;box-shadow:0 10px 18px rgba(0,0,0,.5)}
+#mt{margin:0;font-size:60px;line-height:1.1;font-weight:800;background:linear-gradient(180deg,#fff3c4,#ffd15c 55%,#f0a82a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 10px rgba(255,190,60,.3))}
+.tag{margin:4px 0 0;font-size:15px;opacity:.8}
+.acts{width:100%;display:flex;flex-direction:column;gap:14px}
+.mb{width:100%;display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 16px;border-radius:20px;font-size:21px;font-weight:800}
+.mb small{font-size:13px;font-weight:600;opacity:.75}
+.mb.pri{color:#3a2600;background:linear-gradient(180deg,#ffe48f,#f5b836);box-shadow:0 5px 0 #b9821a,0 12px 22px rgba(0,0,0,.4)}
+.mb.pri:active{box-shadow:0 2px 0 #b9821a}
+.mb.sec{color:#fff;background:rgba(255,255,255,.08);border:1.5px solid rgba(140,180,255,.5);box-shadow:0 5px 0 rgba(0,0,0,.35),0 12px 22px rgba(0,0,0,.3)}
+#inst{background:none;box-shadow:none;border:0;font-size:14px;color:#cfe0ff;padding:4px}
+.mn .by{font-size:13px;font-weight:700;color:#ffe08a;opacity:.85;margin:0}
 /* ===== كارت الفوز ===== */
 .win{position:fixed;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;background:rgba(3,10,25,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-.win .wc{position:relative;width:min(86vw,360px);text-align:center;padding:30px 24px 26px;border-radius:30px;background:linear-gradient(160deg,#1b4585,#0b2147 70%);border:2px solid rgba(255,214,102,.7);box-shadow:0 0 0 6px rgba(255,214,102,.12),0 24px 60px rgba(0,0,0,.6);animation:wpop .5s cubic-bezier(.2,.9,.3,1.2)}
-.win:not(.won) .wc{border-color:rgba(140,180,255,.4);box-shadow:0 24px 60px rgba(0,0,0,.6)}
-@keyframes wpop{from{transform:scale(.6) translateY(30px);opacity:0}}
-#wt{font-size:88px;line-height:1.1;animation:wfloat 2.2s ease-in-out infinite;filter:drop-shadow(0 8px 14px rgba(255,200,60,.45))}
-@keyframes wfloat{50%{transform:translateY(-8px) rotate(-4deg)}}
-#wh{font-size:32px;font-weight:800;margin-top:6px;background:linear-gradient(90deg,#ffe08a,#ffb347);-webkit-background-clip:text;background-clip:text;color:transparent}
-.win:not(.won) #wh{background:none;color:#cfe0ff}
-#ws{font-size:46px;font-weight:800;margin:4px 0 20px;letter-spacing:2px}
-#wb{width:100%;font-size:19px;padding:13px}
-#conf{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-#conf i{position:absolute;top:-16px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards}
-@keyframes fall{to{transform:translateY(105vh) rotate(560deg)}}
-/* ===== طاولة كحلي + خلفية قوية ===== */
-html,body{background:#06194a}
-#app{background:
- radial-gradient(620px 420px at 12% 6%,rgba(0,210,255,.5),transparent 62%),
- radial-gradient(720px 520px at 92% 96%,rgba(130,80,255,.55),transparent 62%),
- radial-gradient(circle,rgba(255,255,255,.1) 2px,transparent 2.6px) 0 0/36px 36px,
- linear-gradient(160deg,#1046a8 0%,#0a2c75 48%,#061a4f 100%);
- animation:dots 40s linear infinite}
-@keyframes dots{to{background-position:0 0,0 0,36px 36px,0 0}}
-#board{background:repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0 2px,transparent 2px 9px),radial-gradient(ellipse at 50% 45%,#0f2d5e 0%,#081a38 75%);border:2px solid rgba(255,214,102,.6);box-shadow:inset 0 0 50px rgba(0,0,0,.6),0 0 0 6px rgba(6,20,52,.55),0 14px 34px rgba(0,0,0,.5)}
-.t{box-shadow:0 1px 0 #fff inset,0 -3px 0 rgba(0,0,0,.08) inset,0 6px 12px rgba(0,0,0,.65)}
-.zone{border-color:#ffd666;color:#ffe9a8;background:rgba(255,214,102,.12)}
-@keyframes zpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,214,102,.55)}50%{box-shadow:0 0 0 10px rgba(255,214,102,0)}}
-/* ===== لون واحد: كحلي ===== */
-html,body,#app{background:#0b2147;animation:none}
-#board{background:#0b2147;border:2px solid #1c4180;box-shadow:none}
-.zone{border-color:#a9c8ff;color:#d6e6ff;background:rgba(169,200,255,.1)}
-@keyframes zpulse{0%,100%{box-shadow:0 0 0 0 rgba(169,200,255,.5)}50%{box-shadow:0 0 0 10px rgba(169,200,255,0)}}
-.card,.win .wc{background:#0b2147;border:1px solid #1c4180;box-shadow:0 20px 50px rgba(0,0,0,.55)}
-.win:not(.won) .wc{border-color:#1c4180}
-/* ===== كروت ثابتة وهادية ===== */
-.t{background:#e4e0d4;border:1px solid #cbc5b3;box-shadow:0 3px 8px rgba(0,0,0,.35)}
-.t::after{background:#b3ab95;box-shadow:none}
-.d{background:#2b303b;box-shadow:none}
-.h+.h{border-left-color:#c8c2af}
-.t.v .h+.h,#hand .t .h+.h{border-top-color:#c8c2af}
-.back{background:#1c3a6e;border-color:#12284d;box-shadow:none}
-#hand .t.ok{animation:none;transform:translateY(-8px);box-shadow:0 0 0 2px #9fc3ff,0 6px 12px rgba(0,0,0,.4)}
-#hand .t.sel{animation:none;transform:translateY(-10px);box-shadow:0 0 0 2px #fff,0 6px 12px rgba(0,0,0,.4)}
-.zone{animation:zin .22s ease-out}
-/* ===== السلسلة تلف على صفوف بدل السكرول ===== */
-#board{overflow-x:hidden;overflow-y:auto;align-items:flex-start;min-height:0;scrollbar-width:thin;scroll-behavior:auto}
-#board .in{flex-wrap:wrap;justify-content:center;align-items:center;margin:auto;gap:10px 6px;max-width:100%}
-#wp{font-size:17px;font-weight:700;color:#cfe0ff;min-height:4px;margin:2px 0 6px}
-#ws{margin-bottom:6px}
-#wb{margin-top:14px}
-/* ===== ضوء أصفر خفيف للورق اللي تقدر تلعبه ===== */
-#hand .t.ok{animation:none;transform:translateY(-8px);box-shadow:0 0 0 2px rgba(255,224,102,.9),0 0 14px rgba(255,224,102,.55),0 6px 12px rgba(0,0,0,.4)}
-#hand .t.sel{animation:none;transform:translateY(-10px);box-shadow:0 0 0 2px #fff,0 0 16px rgba(255,255,255,.6),0 6px 12px rgba(0,0,0,.4)}
-.credit{text-align:center;font-size:12px;font-weight:700;color:#cfe0ff;opacity:.7;padding:2px 0 6px}
-/* ===== أنيميشن السحب ورقة ورقة ===== */
-#hand .t.new{animation:dropIn .4s cubic-bezier(.2,.9,.3,1.15)!important}
-/* ===== خلفية كحلي غامق زي الطاولة القماش ===== */
-html,body{background:#061430}
-#app{
-  background:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
-    radial-gradient(ellipse 85% 70% at 50% 42%,#1a417c 0%,#112f61 40%,#0a2147 70%,#050f26 100%);
-  animation:none;
-}
-#board{background:transparent;border:0;box-shadow:none;border-radius:0}
-.pill{background:rgba(5,15,38,.55);border:1.5px solid rgba(255,214,102,.55)}
-
-/* ===== شيل المربع نهائياً + ارتفاع الشاشة الحقيقي ===== */
-#board{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;outline:0}
-#app{height:100vh;height:100dvh}
-
-/* ===== كارت المكسب والخسارة (شكل جديد) ===== */
-.win .wc{width:min(88vw,380px);padding:28px 22px 22px;border-radius:28px;background:linear-gradient(165deg,#173d78 0%,#0a1d40 78%);border:1.5px solid rgba(255,214,102,.7);box-shadow:0 0 0 6px rgba(255,214,102,.1),0 26px 60px rgba(0,0,0,.65)}
+.win .wc{position:relative;width:min(88vw,380px);text-align:center;padding:28px 22px 22px;border-radius:28px;background:linear-gradient(165deg,#173d78,#0a1d40 78%);border:1.5px solid rgba(255,214,102,.7);box-shadow:0 0 0 6px rgba(255,214,102,.1),0 26px 60px rgba(0,0,0,.65);animation:wpop .5s cubic-bezier(.2,.9,.3,1.2)}
 .win:not(.won) .wc{border-color:rgba(140,180,255,.45);box-shadow:0 0 0 6px rgba(140,180,255,.08),0 26px 60px rgba(0,0,0,.65)}
-#wt{font-size:74px;line-height:1.1}
-#wh{font-family:'Cairo',sans-serif;font-size:36px;font-weight:800;margin-top:4px;letter-spacing:.3px;background:linear-gradient(180deg,#fff3c4 0%,#ffd15c 55%,#f0a82a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 8px rgba(255,190,60,.35))}
-.win:not(.won) #wh{background:none;color:#d6e4ff;filter:none}
+@keyframes wpop{from{transform:scale(.6) translateY(30px);opacity:0}}
+#wt{font-size:74px;line-height:1.1;animation:wfloat 2.2s ease-in-out infinite}
+@keyframes wfloat{50%{transform:translateY(-8px) rotate(-4deg)}}
+#wh{font-size:36px;font-weight:800;margin-top:4px;background:linear-gradient(180deg,#fff3c4,#ffd15c 55%,#f0a82a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.win:not(.won) #wh{background:none;color:#d6e4ff}
 #wp{display:inline-block;font-size:15px;font-weight:700;color:#ffe9a8;background:rgba(255,214,102,.12);border:1px solid rgba(255,214,102,.35);border-radius:999px;padding:4px 16px;margin:8px 0 4px}
 .win:not(.won) #wp{color:#cfe0ff;background:rgba(140,180,255,.1);border-color:rgba(140,180,255,.3)}
 #wp:empty{display:none}
-#ws{display:flex;align-items:center;justify-content:center;gap:12px;margin:14px 0 6px;letter-spacing:0;font-size:inherit}
+#ws{display:flex;align-items:center;justify-content:center;gap:12px;margin:14px 0 6px}
 #ws .sep{font-size:30px;font-weight:800;opacity:.5}
 .sb{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(140,180,255,.3);border-radius:18px;padding:10px 6px 8px}
 .sb small{display:block;font-size:14px;font-weight:700;opacity:.8}
@@ -208,23 +104,24 @@ html,body{background:#061430}
 .sb.me{border-color:rgba(255,214,102,.75);background:rgba(255,214,102,.08)}
 .sb.me b{color:#ffe08a}
 #wb{width:100%;font-size:20px;font-weight:800;padding:13px;margin-top:16px;color:#3a2600;border-radius:16px;background:linear-gradient(180deg,#ffe48f,#f5b836);box-shadow:0 4px 0 #b9821a,0 10px 18px rgba(0,0,0,.35)}
-#wb:active{transform:translateY(2px);box-shadow:0 2px 0 #b9821a}
-
-/* ===== زرار الشاشة الكاملة + رسالة لف الموبايل ===== */
+#conf{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+#conf i{position:absolute;top:-16px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(560deg)}}
+/* ===== شاشة كاملة + لف الموبايل ===== */
 #fsb{position:fixed;left:66px;bottom:calc(12px + env(safe-area-inset-bottom));padding:6px 12px;z-index:4;font-size:18px}
+#snd{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));padding:6px 12px;z-index:4;font-size:18px}
 #rot{display:none;position:fixed;inset:0;z-index:30;background:#061430;align-items:center;justify-content:center;text-align:center;padding:30px;flex-direction:column;gap:10px}
 #rot .ic{font-size:70px;animation:rotp 2s ease-in-out infinite}
 #rot p{font-size:20px;font-weight:800;margin:0}
 #rot small{opacity:.7;font-size:13px}
 @keyframes rotp{0%,30%{transform:rotate(0)}70%,100%{transform:rotate(-90deg)}}
 @media (orientation:portrait) and (max-width:700px){#rot:not(.off){display:flex}}
-
-/* ===== تصميم الموبايل بالعرض (مضغوط) ===== */
+/* ===== موبايل بالعرض ===== */
 @media (orientation:landscape) and (max-height:520px){
   #app{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
   .top{padding:4px 2px;gap:6px}
   .pill{font-size:12px;padding:3px 10px;border-radius:11px}
-  #oppname{font-size:12px;margin-bottom:2px!important}
+  #oppname{font-size:12px;margin-bottom:2px}
   .back{width:11px;height:24px;margin:0 2px;border-radius:3px}
   #msg{font-size:14px;min-height:18px}
   .bar{padding:2px;min-height:0;gap:8px}
@@ -232,20 +129,21 @@ html,body{background:#061430}
   button{font-size:14px;padding:6px 14px;border-radius:11px}
   #hand{padding:8px 6px 4px;gap:clamp(6px,1.5vw,14px)}
   #hand .t .h{width:28px;height:28px;padding:5px}
-  .h{width:30px;height:30px;padding:5px}
   .d{width:6px;height:6px}
-  .zone{width:44px;height:44px;font-size:20px}
   .credit{display:none}
   .card{padding:14px 18px;max-height:94vh;overflow:auto}
   .card h2{font-size:20px;margin-bottom:8px}
-  .card button{margin:5px 0;padding:8px}
-  .win .wc{padding:14px 20px 14px;width:min(70vw,420px)}
-  #wt{font-size:46px}
-  #wh{font-size:26px;margin-top:0}
-  .sb b{font-size:30px}
-  .sb{padding:6px}
+  .card>button{margin:5px 0;padding:8px}
+  .win .wc{padding:14px 20px;width:min(70vw,420px)}
+  #wt{font-size:46px}#wh{font-size:26px;margin-top:0}
+  .sb b{font-size:30px}.sb{padding:6px}
   #wb{margin-top:10px;padding:9px;font-size:17px}
-  #fsb,#snd{padding:4px 10px!important;font-size:16px!important}
+  #fsb,#snd{padding:4px 10px;font-size:16px}
+  .mn{flex-direction:row;width:min(92vw,720px);gap:40px}
+  .hero{flex:1}.acts{flex:1}
+  .fan{height:96px}.fan .t{transform-origin:50% 100%}
+  #mt{font-size:40px}.tag{font-size:12px}
+  .mb{padding:9px 12px;font-size:17px}.mb small{font-size:11px}
 }
 </style>
 </head>
@@ -253,7 +151,7 @@ html,body{background:#061430}
 <div id="app">
   <div class="top">
     <div class="pill" id="score">أنت 0 : 0 الخصم</div>
-    <div class="opp"><div id="oppname" style="font-weight:700;margin-bottom:4px">الخصم</div><div id="opp"></div></div>
+    <div class="opp"><div id="oppname">الخصم</div><div id="opp"></div></div>
     <div class="pill" id="info">البوكس 14</div>
   </div>
   <div id="board"><div class="in" id="bin"></div></div>
@@ -263,43 +161,33 @@ html,body{background:#061430}
   <div class="credit">تم إنشاء اللعبة بواسطة مينا عاطف</div>
 </div>
 
-<button class="g" id="snd" onclick="mute=!mute;this.textContent=mute?'🔇':'🔊'" style="position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));padding:6px 12px;z-index:4;font-size:18px">🔊</button>
+<button class="g" id="snd" onclick="mute=!mute;this.textContent=mute?'🔇':'🔊'">🔊</button>
 <button class="g" id="fsb" onclick="toggleFull()">⛶</button>
 <div id="rot" onclick="this.classList.add('off')"><div class="ic">📱</div><p>لف الموبايل بالعرض عشان تلعب</p><small>أو اضغط في أي مكان للمتابعة</small></div>
 <div id="win" class="win hide"><div id="conf"></div><div class="wc"><div id="wt">🏆</div><div id="wh"></div><div id="wp"></div><div id="ws"></div><button id="wb" onclick="act(V.me,'again')"></button></div></div>
+
 <div id="menu">
-  <div class="card">
-    <h2>🁣 دومنو 1 ضد 1</h2>
-    <button onclick="startBot()">العب ضد الكمبيوتر</button>
-    <button class="g" onclick="netUI('host')">افتح غرفة (هوست)</button>
-    <button class="g" onclick="netUI('guest')">انضم لغرفة</button>
-    <button onclick="openOnlineLobby()">🌐 العب أونلاين مع لاعب</button>
-    <button class="g hide" id="inst" onclick="installApp()">📲 ثبّت اللعبة</button>
-    <p style="font-size:12px;opacity:.7">اللعب مع صاحبك: تبعتوا لبعض كود نسخ ولصق مرة واحدة بس. الأفضل تكونوا على نفس الواي فاي.</p>
-    <p style="font-size:14px;font-weight:700;margin:10px 0 0;color:#ffe08a">تم إنشاء اللعبة بواسطة مينا عاطف</p>
+  <div class="mn">
+    <div class="hero">
+      <div class="fan" id="fan"></div>
+      <h1 id="mt">دومنو</h1>
+      <p class="tag">1 ضد 1 · أول واحد يوصل 100 نقطة يكسب</p>
+    </div>
+    <div class="acts">
+      <button class="mb pri" onclick="startBot()">العب ضد الكمبيوتر<small>ابدأ فورًا من غير انتظار</small></button>
+      <button class="mb sec" onclick="openOnlineLobby()">🌐 العب أونلاين<small>اتحدى لاعب متصل دلوقتي</small></button>
+      <button id="inst" class="hide" onclick="installApp()">📲 ثبّت اللعبة على موبايلك</button>
+      <p class="by" style="text-align:center">تم إنشاء اللعبة بواسطة مينا عاطف</p>
+    </div>
   </div>
 </div>
 
-<div id="net" class="hide">
-  <div class="card">
-    <h2 id="nt"></h2>
-    <p id="n1" style="font-size:13px"></p>
-    <textarea id="out" readonly></textarea>
-    <button onclick="shareWA()">📲 ابعت على واتساب</button>
-    <button class="g" onclick="copyOut()">نسخ اللينك</button>
-    <p id="n2" style="font-size:13px"></p>
-    <textarea id="inp" placeholder="الصق الكود هنا"></textarea>
-    <button id="ok" onclick="applyIn()">تأكيد</button>
-    <button class="g" onclick="location.reload()">رجوع</button>
-  </div>
-</div>
-
-<div id="onlineLobby" class="hide" style="position:fixed;inset:0;z-index:20;background:rgba(3,10,25,.86);backdrop-filter:blur(8px);padding:16px;overflow:auto;align-items:center;justify-content:center">
+<div id="onlineLobby" class="hide" style="position:fixed;inset:0;z-index:20;background:rgba(3,10,25,.86);backdrop-filter:blur(8px);padding:16px;overflow:auto">
   <div class="card" style="max-width:520px;margin:4vh auto;text-align:right">
     <h2 style="text-align:center">🌐 اللاعبين أونلاين</h2>
     <p id="onlineStatus" style="text-align:center;font-size:13px">جاري الاتصال...</p>
     <label for="onlineName">اسمك داخل اللعبة</label>
-    <input id="onlineName" maxlength="18" placeholder="اكتب اسمك" style="width:100%;padding:12px;border-radius:10px;border:1px solid #456;background:#0b2147;color:white;margin:8px 0" />
+    <input id="onlineName" maxlength="18" placeholder="اكتب اسمك" style="width:100%;padding:12px;border-radius:10px;border:1px solid #456;background:#0b2147;color:white;margin:8px 0">
     <button class="g" style="width:100%" onclick="saveOnlineName()">حفظ الاسم</button>
     <div style="height:1px;background:#ffffff2b;margin:14px 0"></div>
     <h3>اللاعبون المتصلون</h3>
@@ -315,13 +203,13 @@ html,body{background:#061430}
 const $=s=>document.querySelector(s);
 const PIPS={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 const TARGET=100, TURN=25;
-// ---------- تثبيت كتطبيق (PWA) ----------
+// ---------- PWA ----------
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 let dip=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;$('#inst').classList.remove('hide')});
 addEventListener('appinstalled',()=>$('#inst').classList.add('hide'));
 function installApp(){if(dip){dip.prompt();dip=null;$('#inst').classList.add('hide')}}
-// ---------- شاشة كاملة + عرض ----------
+// ---------- شاشة كاملة ----------
 let fsAuto=false;
 function isFull(){return !!(document.fullscreenElement||document.webkitFullscreenElement)}
 function lockLand(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{})}catch(e){}}
@@ -334,20 +222,23 @@ function toggleFull(){
   if(isFull()){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document)}catch(e){}}
   else goFull();
 }
-// أول لمسة على الشاشة تدخّل شاشة كاملة وتقفل العرض
 document.addEventListener('click',()=>{if(!fsAuto){fsAuto=true;if(!isFull())goFull()}},{capture:true});
 // ---------- رسم القطع ----------
 function half(n){const h=document.createElement('div');h.className='h';for(let i=0;i<9;i++){const c=document.createElement('div');if(PIPS[n].includes(i))c.className='d';h.appendChild(c)}return h}
 function tileEl(t,vert){const e=document.createElement('div');e.className='t'+(vert?' v':'');e.append(half(t[0]),half(t[1]));return e}
+// شعار القائمة
+[[6,5,-16,6],[3,3,0,0],[4,2,16,6]].forEach(([a,b,r,y])=>{
+  const e=tileEl([a,b],true);e.style.transform=`translateY(${y}px) rotate(${r}deg) scale(1.3)`;$('#fan').appendChild(e);
+});
 // ---------- منطق اللعبة (عند الهوست فقط) ----------
-let g,mode,me=0,ch,pc,bot=false;
+let g,mode,me=0,ch,bot=false;
 const sum=h=>h.reduce((s,t)=>s+t[0]+t[1],0);
 function newRound(){
   const by=[];for(let i=0;i<=6;i++)for(let j=i;j<=6;j++)by.push([i,j]);
   for(let i=by.length-1;i>0;i--){const k=Math.floor(Math.random()*(i+1));[by[i],by[k]]=[by[k],by[i]]}
   const h=[by.splice(0,7),by.splice(0,7)];
   let best=-1,st=0;h.forEach((hh,p)=>hh.forEach(t=>{const s=t[0]==t[1]?100+t[0]:t[0]+t[1];if(s>best){best=s;st=p}}));
-  g={by,h,board:[],cur:st,sc:g?g.sc:[0,0],rd:g?g.rd+1:1,rw:-1,mw:-1,pts:0,drawing:false};
+  g={by,h,board:[],ci:0,cur:st,sc:g?g.sc:[0,0],rd:g?g.rd+1:1,rw:-1,mw:-1,pts:0,drawing:false};
   push();botMaybe();
 }
 const L=()=>g.board[0][0], R=()=>g.board[g.board.length-1][1];
@@ -362,8 +253,8 @@ function act(p,type,t,s){
     const i=g.h[p].findIndex(x=>(x[0]==t[0]&&x[1]==t[1])||(x[0]==t[1]&&x[1]==t[0]));
     if(i<0||!can(g.h[p][i],s))return;
     let x=g.h[p].splice(i,1)[0];
-    if(!g.board.length)g.board.push(x);
-    else if(s==0)g.board.unshift(x[1]==L()?x:[x[1],x[0]]);
+    if(!g.board.length){g.board.push(x);g.ci=0}
+    else if(s==0){g.board.unshift(x[1]==L()?x:[x[1],x[0]]);g.ci++}
     else g.board.push(x[0]==R()?x:[x[1],x[0]]);
     if(g.h[p].length)g.cur=1-p;
   }else if(type==='draw'){
@@ -372,7 +263,6 @@ function act(p,type,t,s){
   }
   finish();
 }
-// سحب ورقة ورقة بينها فاصل زمني
 function drawStep(p){
   g.drawing=true;
   if(g.by.length)g.h[p].push(g.by.pop());
@@ -401,45 +291,31 @@ function botMaybe(){
     act(1,'play',opts[0][0],opts[0][1]);
   },900);
 }
-const view=p=>({hand:g.h[p],opp:g.h[1-p].length,by:g.by.length,board:g.board,cur:g.cur,me:p,sc:g.sc,rd:g.rd,rw:g.rw,mw:g.mw,pts:g.pts,dr:!!g.drawing});
+const view=p=>({hand:g.h[p],opp:g.h[1-p].length,by:g.by.length,board:g.board,ci:g.ci,cur:g.cur,me:p,sc:g.sc,rd:g.rd,rw:g.rw,mw:g.mw,pts:g.pts,dr:!!g.drawing});
 function push(){render(view(0));if(mode==='host'&&ch&&ch.readyState==='open')ch.send(JSON.stringify({t:'s',v:view(1)}))}
-// ---------- الواجهة ----------
+// ---------- الصوت ----------
 let V=null,sel=null,tk='',tleft=TURN,tint=null;
-// ---------- الصوت (متولّد بـ WebAudio بدون ملفات) ----------
 let AC,mute=false,lastB=-1,lastRd=0,lastBy=-1,lastRw=-1;
 function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC}
 document.addEventListener('pointerdown',ac);
 function clack(vol=1,when=0,pitch=1){
   const a=ac();if(!a||mute)return;const t=a.currentTime+when;
   [[1,1],[2,.25]].forEach(([m,k])=>{
-    const o=a.createOscillator(),g=a.createGain();
+    const o=a.createOscillator(),gn=a.createGain();
     o.type='sine';o.frequency.value=587*pitch*m;
-    g.gain.setValueAtTime(.0001,t);
-    g.gain.exponentialRampToValueAtTime(.07*vol*k,t+.012);
-    g.gain.exponentialRampToValueAtTime(.0001,t+.3);
-    o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+.32);
+    gn.gain.setValueAtTime(.0001,t);
+    gn.gain.exponentialRampToValueAtTime(.07*vol*k,t+.012);
+    gn.gain.exponentialRampToValueAtTime(.0001,t+.3);
+    o.connect(gn);gn.connect(a.destination);o.start(t);o.stop(t+.32);
   });
-}
-function clackOld(vol=1,when=0,pitch=1){
-  const a=ac();if(!a||mute)return;const t=a.currentTime+when;
-  const len=Math.floor(a.sampleRate*.06),buf=a.createBuffer(1,len,a.sampleRate),d=buf.getChannelData(0);
-  for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,4);
-  const n=a.createBufferSource();n.buffer=buf;
-  const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=2200*pitch;f.Q.value=.9;
-  const g=a.createGain();g.gain.value=.9*vol;
-  n.connect(f);f.connect(g);g.connect(a.destination);n.start(t);
-  const o=a.createOscillator(),og=a.createGain();o.type='sine';
-  o.frequency.setValueAtTime(190*pitch,t);o.frequency.exponentialRampToValueAtTime(70,t+.07);
-  og.gain.setValueAtTime(.7*vol,t);og.gain.exponentialRampToValueAtTime(.001,t+.09);
-  o.connect(og);og.connect(a.destination);o.start(t);o.stop(t+.1);
 }
 function shuffleSnd(){[0,4,7,12].forEach((s,i)=>clack(.5,i*.1,Math.pow(2,s/12)*.75))}
 function chime(win){
   const a=ac();if(!a||mute)return;
   (win?[523,659,784,1047]:[392,330]).forEach((f,i)=>{
-    const t=a.currentTime+i*.14,o=a.createOscillator(),g=a.createGain();
-    o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.25,t);g.gain.exponentialRampToValueAtTime(.001,t+.35);
-    o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+.4);
+    const t=a.currentTime+i*.14,o=a.createOscillator(),gn=a.createGain();
+    o.type='triangle';o.frequency.value=f;gn.gain.setValueAtTime(.25,t);gn.gain.exponentialRampToValueAtTime(.001,t+.35);
+    o.connect(gn);gn.connect(a.destination);o.start(t);o.stop(t+.4);
   });
 }
 function sfx(v){
@@ -451,6 +327,67 @@ function sfx(v){
   }
   if(v.rw>=0&&lastRw<0){lastRw=v.rw;chime(v.rw===v.me)}
 }
+// ---------- ترتيب الثعبان ----------
+function snakeLayout(v,S,maxX,two){
+  const g=4,minX=-maxX,items=[],bd=v.board,ci=v.ci||0;
+  const c=bd[ci],cd=c[0]==c[1],cw=cd?S:2*S,chh=cd?2*S:S;
+  items.push({k:'t',i:ci,x:-cw/2,y:-chh/2,w:cw,h:chh,vert:cd,d:c});
+  const arm=(list,flip,edge,d,vd)=>{
+    let y=0,pd=cd,cnt=1;
+    for(const it of list){
+      const t=it.t,f=flip?[t[1],t[0]]:t,db=t[0]==t[1],w=db?S:2*S,h=db?2*S:S;
+      const x0=d>0?edge+g:edge-g-w,x1=x0+w;
+      if((d>0?x1>maxX:x0<minX)&&cnt>0){
+        const top=vd>0?y+(pd?S:S/2)+g:y-(pd?S:S/2)-g-2*S;
+        y=vd>0?top+1.5*S:top+.5*S;
+        items.push({k:it.k,i:it.i,s:it.s,x:d>0?edge-S:edge,y:top,w:S,h:2*S,vert:true,d:vd>0?f:[f[1],f[0]]});
+        edge=d>0?edge-S:edge+S;d=-d;pd=false;cnt=0;continue;
+      }
+      items.push({k:it.k,i:it.i,s:it.s,x:x0,y:y-h/2,w,h,vert:db,d:db?f:(d>0?f:[f[1],f[0]])});
+      edge=d>0?x1:x0;pd=db;cnt++;
+    }
+  };
+  const right=bd.slice(ci+1).map((t,j)=>({t,i:ci+1+j,k:'t'}));
+  const left=[];for(let j=ci-1;j>=0;j--)left.push({t:bd[j],i:j,k:'t'});
+  if(two){right.push({t:[0,1],k:'z',s:1});left.push({t:[0,1],k:'z',s:0})}
+  arm(right,false,cw/2,1,1);
+  arm(left,true,-cw/2,-1,-1);
+  let a=1e9,b=1e9,c2=-1e9,d2=-1e9;
+  items.forEach(o=>{a=Math.min(a,o.x);b=Math.min(b,o.y);c2=Math.max(c2,o.x+o.w);d2=Math.max(d2,o.y+o.h)});
+  return{items,minX:a,minY:b,maxX:c2,maxY:d2};
+}
+function drawSnake(bin,b,v,ni,two){
+  if(!v.board.length){bin.style.cssText='';return}
+  const S=(innerHeight<=520&&innerWidth>innerHeight)?30:38;
+  const cs=getComputedStyle(b);
+  const W=b.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-4;
+  const H=b.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-4;
+  let L,z=1;
+  for(const q of [1,.9,.8,.72,.64,.57,.5,.44]){
+    z=q;L=snakeLayout(v,S,W/q/2,two);
+    if((L.maxY-L.minY)*q<=H)break;
+  }
+  const bw=(L.maxX-L.minX)*z,bh=(L.maxY-L.minY)*z;
+  bin.style.cssText=`display:block;position:relative;flex:none;width:${bw}px;height:${bh}px;--S:${S}px`;
+  const sn=document.createElement('div');sn.className='sn';
+  sn.style.transform=`scale(${z})`;
+  L.items.forEach(o=>{
+    let e;
+    if(o.k==='z'){
+      e=document.createElement('div');e.className='zone';
+      e.textContent=o.s===0?'◀':'▶';e.onclick=()=>go(o.s);
+    }else{
+      e=tileEl(o.d,o.vert);
+      if(o.i===ni)e.classList.add('new');
+    }
+    e.style.left=(o.x-L.minX)+'px';e.style.top=(o.y-L.minY)+'px';
+    e.style.width=o.w+'px';e.style.height=o.h+'px';
+    sn.appendChild(e);
+  });
+  bin.appendChild(sn);
+}
+addEventListener('resize',()=>{if(V)render(V)});
+// ---------- الواجهة ----------
 function render(v){
   sfx(v);V=v;const m=v.me;
   const mine=v.sc[m],theirs=v.sc[1-m];
@@ -461,15 +398,8 @@ function render(v){
   const pb=window._pb||[];let ni=-1;
   if(v.rd===window._pr&&v.board.length>pb.length)ni=(!pb[0]||v.board[0][0]!==pb[0][0]||v.board[0][1]!==pb[0][1])?0:v.board.length-1;
   window._pb=v.board.map(t=>t.slice());window._pr=v.rd;
-  const zone=(s,c)=>{const z=document.createElement('div');z.className='zone';z.textContent=c;z.onclick=()=>go(s);return z};
   const two=sel&&v.cur===m&&v.rw<0&&v.board.length>1&&v.hand.some(x=>x[0]==sel[0]&&x[1]==sel[1])&&sidesFor(sel).length===2;
-  if(two)bin.appendChild(zone(0,'◀'));
-  v.board.forEach((t,i)=>{const e=tileEl(t,t[0]==t[1]);if(i===ni)e.classList.add('new');bin.appendChild(e)});
-  if(two)bin.appendChild(zone(1,'▶'));
-  const b=$('#board');
-  bin.style.zoom=v.board.length>20?.62:v.board.length>14?.74:v.board.length>9?.88:1;
-  const nt=bin.querySelector('.new')||bin.querySelector('.zone');
-  if(nt){const r=nt.getBoundingClientRect(),br=b.getBoundingClientRect();if(r.bottom>br.bottom)b.scrollTop+=r.bottom-br.bottom+10;else if(r.top<br.top)b.scrollTop-=br.top-r.top+10}
+  drawSnake(bin,$('#board'),v,ni,two);
   const hand=$('#hand');hand.innerHTML='';
   const myTurn=v.cur===m&&v.rw<0;
   const L_=v.board.length?v.board[0][0]:-1,R_=v.board.length?v.board[v.board.length-1][1]:-1;
@@ -478,7 +408,7 @@ function render(v){
   const pk=t=>Math.min(t[0],t[1])+'-'+Math.max(t[0],t[1]);
   const prevH=(window._pr2===v.rd&&window._ph)?window._ph:null;
   sorted.forEach(t=>{
-    const e=tileEl(t,true);e.className='t'+(myTurn&&ok(t)?' ok':'')+(sel&&sel[0]==t[0]&&sel[1]==t[1]?' sel':'')+(prevH&&!prevH.has(pk(t))?' new':'');
+    const e=tileEl(t,true);e.className='t v'+(myTurn&&ok(t)?' ok':'')+(sel&&sel[0]==t[0]&&sel[1]==t[1]?' sel':'')+(prevH&&!prevH.has(pk(t))?' new':'');
     e.onclick=()=>pick(t);hand.appendChild(e);
   });
   window._ph=new Set(v.hand.map(pk));window._pr2=v.rd;
@@ -517,7 +447,6 @@ function pick(t){
   if(!V||V.cur!==V.me||V.rw>=0||V.dr)return;
   const s=sidesFor(t);if(!s.length)return;
   const Lv=V.board[0]?.[0],Rv=V.board[V.board.length-1]?.[1];
-  // تتلعب على طول لو: جهة واحدة بس، أو أول ورقة، أو الطرفين نفس الرقم
   if(s.length===1||V.board.length<=1||Lv===Rv){act(V.me,'play',t,s[0]);return}
   sel=(sel&&sel[0]==t[0]&&sel[1]==t[1])?null:t;render(V);
 }
@@ -529,15 +458,6 @@ function auto(){
 $('#drawBtn').onclick=()=>act(V.me,'draw');
 // ---------- أوضاع اللعب ----------
 function startBot(){$('#menu').classList.add('hide');mode='bot';bot=true;me=0;g=null;newRound()}
-const CFG={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
-const BASE='https://claude.ai/artifact/GbomhGgY6HzHRN6rNpaGUK';
-const b64u=u=>btoa(String.fromCharCode(...u)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-const unb64u=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
-async function pipe(bytes,S){const r=new Response(new Blob([bytes]).stream().pipeThrough(new S('deflate-raw')));return new Uint8Array(await r.arrayBuffer())}
-const enc=async o=>b64u(await pipe(new TextEncoder().encode(JSON.stringify(o)),CompressionStream));
-const dec=async s=>JSON.parse(new TextDecoder().decode(await pipe(unb64u(s),DecompressionStream)));
-function waitIce(){return new Promise(r=>{if(pc.iceGatheringState==='complete')return r();pc.onicegatheringstatechange=()=>pc.iceGatheringState==='complete'&&r();setTimeout(r,4000)})}
-function linkBase(){return /^https?:/.test(location.protocol)&&!/claude|anthropic/.test(location.hostname)?location.href.split('#')[0]:BASE}
 function adapt(conn){
   ch={send:s=>conn.send(s),get readyState(){return conn.open?'open':'closed'}};
   hook();
@@ -546,90 +466,10 @@ function adapt(conn){
   conn.on('close',()=>ch.onclose&&ch.onclose());
   if(conn.open&&ch.onopen)ch.onopen();
 }
-// لينك مباشر: الصاحب يفتح اللينك فتبدأ اللعبة فوراً (PeerJS)
-function instantHost(){
-  if(!window.Peer)return Promise.resolve(false);
-  return new Promise(res=>{
-    let done=false;const fin=v=>{if(!done){done=true;res(v)}};
-    let peer;try{peer=new Peer()}catch(e){return fin(false)}
-    setTimeout(()=>fin(false),7000);
-    peer.on('error',()=>fin(false));
-    peer.on('open',id=>{
-      $('#out').value=linkBase()+'#r'+id;
-      $('#n1').textContent='ابعت اللينك ده لصاحبك، أول ما يفتحه اللعبة هتبدأ لوحده 👇';
-      fin(true);
-    });
-    peer.on('connection',conn=>{if(!ch)adapt(conn)});
-  });
-}
-async function netUI(role){
-  $('#menu').classList.add('hide');$('#net').classList.remove('hide');
-  mode=role;
-  if(role==='host'){
-    $('#nt').textContent='افتح غرفة';$('#n1').textContent='جاري تجهيز اللينك...';$('#n2').textContent='';
-    $('#inp').classList.add('hide');$('#ok').classList.add('hide');
-    if(await instantHost())return;
-    $('#inp').classList.remove('hide');$('#ok').classList.remove('hide');
-  }
-  pc=new RTCPeerConnection(CFG);
-  if(role==='host'){
-    $('#nt').textContent='افتح غرفة';
-    $('#n1').textContent='1) ابعت اللينك ده لصاحبك على واتساب';
-    $('#n2').textContent='2) لما يرد عليك، الصق رسالته هنا واضغط تأكيد';
-    ch=pc.createDataChannel('d');hook();
-    await pc.setLocalDescription(await pc.createOffer());await waitIce();
-    $('#out').value=linkBase()+'#o'+await enc(pc.localDescription);
-  }else{
-    $('#nt').textContent='انضم لغرفة';
-    $('#n1').textContent='1) الصق لينك صاحبك واضغط تأكيد';
-    $('#n2').textContent='2) هيظهر لك لينك الرد: ابعته له';
-    pc.ondatachannel=e=>{ch=e.channel;hook()};
-  }
-}
-const tok=s=>{const m=s.match(/#?([oa][A-Za-z0-9_\-]{100,})/);return m&&m[1]};
-async function guestAnswer(d){
-  await pc.setRemoteDescription(d);
-  await pc.setLocalDescription(await pc.createAnswer());await waitIce();
-  $('#out').value=linkBase()+'#a'+await enc(pc.localDescription);
-}
-async function applyIn(){
-  try{
-    const t=tok($('#inp').value);
-    const d=await dec(t.slice(1));
-    if(mode==='host')await pc.setRemoteDescription(d);
-    else await guestAnswer(d);
-  }catch(e){alert('اللينك مش صحيح')}
-}
-function copyOut(){const o=$('#out');o.select();try{navigator.clipboard.writeText(o.value)}catch(e){document.execCommand('copy')}}
-function shareWA(){
-  const u=$('#out').value;if(!u)return;
-  const txt=(mode==='host'?'تعالى نلعب دومنو 🎲 افتح اللينك:\n':'ده ردي، الصقه في اللعبة:\n')+u;
-  if(navigator.share){navigator.share({text:txt}).catch(()=>{})}
-  else window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
-}
-(async()=>{
-  const h=location.hash.slice(1);
-  if(h[0]==='r'&&h.length>10){
-    mode='guest';$('#menu').classList.add('hide');$('#msg').textContent='جاري الاتصال بالغرفة...';
-    if(!window.Peer){$('#msg').textContent='مش قادر يتصل بالغرفة';return}
-    const peer=new Peer();
-    peer.on('error',()=>{$('#msg').textContent='مش قادر يتصل بالغرفة، تأكد من اللينك'});
-    peer.on('open',()=>adapt(peer.connect(h.slice(1),{reliable:true})));
-    return;
-  }
-  if(h[0]!=='o'||h.length<100)return;
-  try{
-    await netUI('guest');
-    $('#n1').textContent='جاري تجهيز الرد...';$('#n2').textContent='';
-    $('#inp').classList.add('hide');$('#ok').classList.add('hide');
-    await guestAnswer(await dec(h.slice(1)));
-    $('#n1').textContent='ابعت اللينك ده لصاحبك عشان تبدأوا اللعب 👇';
-  }catch(e){$('#n1').textContent='اللينك مش صحيح'}
-})();
 function hook(){
-  ch.onopen=()=>{$('#net').classList.add('hide');$('#onlineLobby').classList.add('hide');$('#oppname').textContent=window.onlineOpponentName||'صاحبك';
+  ch.onopen=()=>{$('#onlineLobby').classList.add('hide');$('#oppname').textContent=window.onlineOpponentName||'صاحبك';
     if(mode==='host'){me=0;bot=false;g=null;newRound()}else me=1};
-  ch.onclose=()=>{$('#msg').textContent='الاتصال اتقطع';ch=null;};
+  ch.onclose=()=>{$('#msg').textContent='الاتصال اتقطع';ch=null};
   ch.onmessage=e=>{
     try{const m=JSON.parse(e.data);
       if(m.t==='s')render(m.v);
@@ -658,7 +498,7 @@ function lobbyStatus(s){const e=$('#onlineStatus');if(e)e.textContent=s}
 function initOnlineFirebase(){
   if(onlineLobbyReady)return Promise.resolve(true);
   if(!window.firebase){lobbyStatus('تعذر تحميل Firebase. افحص اتصال الإنترنت.');return Promise.resolve(false)}
-  try{if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);fbAuth=firebase.auth();fbDB=firebase.database();}
+  try{if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);fbAuth=firebase.auth();fbDB=firebase.database()}
   catch(e){console.error(e);lobbyStatus('تعذر تشغيل خدمة الأونلاين.');return Promise.resolve(false)}
   return fbAuth.signInAnonymously().then(async cred=>{
     fbUser=cred.user;
@@ -685,11 +525,11 @@ function initOnlineFirebase(){
   }).catch(err=>{console.error('Online lobby error:',err);lobbyStatus('فشل الاتصال: '+(err.message||'تحقق من إعدادات Firebase وPeerJS'));return false});
 }
 async function openOnlineLobby(){
-  $('#menu').classList.add('hide');$('#onlineLobby').classList.remove('hide');$('#onlineLobby').style.display='block';
+  $('#menu').classList.add('hide');$('#onlineLobby').classList.remove('hide');
   $('#onlineName').value=onlineName;lobbyStatus('جاري الاتصال بخدمة الأونلاين...');
   await initOnlineFirebase();
 }
-function closeOnlineLobby(){ $('#onlineLobby').classList.add('hide');$('#onlineLobby').style.display='';$('#menu').classList.remove('hide'); }
+function closeOnlineLobby(){$('#onlineLobby').classList.add('hide');$('#menu').classList.remove('hide')}
 async function saveOnlineName(){
   const v=$('#onlineName').value.trim().slice(0,18);if(!v){alert('اكتب اسمًا الأول');return}
   onlineName=v;localStorage.setItem('domino_online_name',v);
@@ -709,7 +549,7 @@ async function sendOnlineInvite(toUid,toName){
   const ref=fbDB.ref('onlineInvites').push();
   await ref.set({id:ref.key,from:fbUser.uid,fromName:onlineName,to:toUid,toName,status:'pending',createdAt:firebase.database.ServerValue.TIMESTAMP});
   lobbyStatus('بعتّ دعوة إلى '+toName+' — مستني القبول');
-  const id=ref.key;ref.on('value',snap=>{const v=snap.val();if(v&&v.status==='rejected'){lobbyStatus(toName+' رفض الدعوة');ref.off();setTimeout(()=>ref.remove().catch(()=>{}),10000)}else if(v&&v.status==='accepted'){lobbyStatus(toName+' قبل الدعوة، جاري انتظار اتصال اللاعب...');ref.off();window.onlineOpponentName=toName;mode='host';bot=false;ch=null;setTimeout(()=>{if(!ch)lobbyStatus('الدعوة اتقبلت لكن الاتصال لم يكتمل. جرّب مرة أخرى')},15000)}});
+  ref.on('value',snap=>{const v=snap.val();if(v&&v.status==='rejected'){lobbyStatus(toName+' رفض الدعوة');ref.off();setTimeout(()=>ref.remove().catch(()=>{}),10000)}else if(v&&v.status==='accepted'){lobbyStatus(toName+' قبل الدعوة، جاري انتظار اتصال اللاعب...');ref.off();window.onlineOpponentName=toName;mode='host';bot=false;ch=null;setTimeout(()=>{if(!ch)lobbyStatus('الدعوة اتقبلت لكن الاتصال لم يكتمل. جرّب مرة أخرى')},15000)}});
 }
 function renderOnlineInvites(){
   const box=$('#onlineInvitesList');if(!box)return;
