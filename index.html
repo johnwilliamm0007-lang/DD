@@ -166,6 +166,8 @@ html,body,#app{background:#0b2147;animation:none}
 #hand .t.ok{animation:none;transform:translateY(-8px);box-shadow:0 0 0 2px rgba(255,224,102,.9),0 0 14px rgba(255,224,102,.55),0 6px 12px rgba(0,0,0,.4)}
 #hand .t.sel{animation:none;transform:translateY(-10px);box-shadow:0 0 0 2px #fff,0 0 16px rgba(255,255,255,.6),0 6px 12px rgba(0,0,0,.4)}
 .credit{text-align:center;font-size:12px;font-weight:700;color:#cfe0ff;opacity:.7;padding:2px 0 6px}
+/* ===== أنيميشن السحب ورقة ورقة ===== */
+#hand .t.new{animation:dropIn .4s cubic-bezier(.2,.9,.3,1.15)!important}
 </style>
 </head>
 <body>
@@ -224,7 +226,7 @@ function newRound(){
   for(let i=by.length-1;i>0;i--){const k=Math.floor(Math.random()*(i+1));[by[i],by[k]]=[by[k],by[i]]}
   const h=[by.splice(0,7),by.splice(0,7)];
   let best=-1,st=0;h.forEach((hh,p)=>hh.forEach(t=>{const s=t[0]==t[1]?100+t[0]:t[0]+t[1];if(s>best){best=s;st=p}}));
-  g={by,h,board:[],cur:st,sc:g?g.sc:[0,0],rd:g?g.rd+1:1,rw:-1,mw:-1,pts:0};
+  g={by,h,board:[],cur:st,sc:g?g.sc:[0,0],rd:g?g.rd+1:1,rw:-1,mw:-1,pts:0,drawing:false};
   push();botMaybe();
 }
 const L=()=>g.board[0][0], R=()=>g.board[g.board.length-1][1];
@@ -234,7 +236,7 @@ function blocked(){return !g.by.length&&!has(0)&&!has(1)}
 function act(p,type,t,s){
   if(mode==='guest'){ch.send(JSON.stringify({t:'a',type,tile:t,side:s}));return}
   if(type==='again'){if(g&&g.mw>=0){g.sc=[0,0];newRound()}return}
-  if(!g||g.rw>=0||g.cur!==p)return;
+  if(!g||g.rw>=0||g.cur!==p||g.drawing)return;
   if(type==='play'){
     const i=g.h[p].findIndex(x=>(x[0]==t[0]&&x[1]==t[1])||(x[0]==t[1]&&x[1]==t[0]));
     if(i<0||!can(g.h[p][i],s))return;
@@ -245,9 +247,20 @@ function act(p,type,t,s){
     if(g.h[p].length)g.cur=1-p;
   }else if(type==='draw'){
     if(has(p))return;
-    while(!has(p)&&g.by.length)g.h[p].push(g.by.pop());
-    if(!has(p))g.cur=1-p;
+    drawStep(p);return;
   }
+  finish();
+}
+// سحب ورقة ورقة بينها فاصل زمني
+function drawStep(p){
+  g.drawing=true;
+  if(g.by.length)g.h[p].push(g.by.pop());
+  if(!has(p)&&g.by.length){push();setTimeout(()=>drawStep(p),450);return}
+  g.drawing=false;
+  if(!has(p))g.cur=1-p;
+  finish();
+}
+function finish(){
   let w=-1;
   if(!g.h[0].length)w=0;else if(!g.h[1].length)w=1;
   else if(blocked())w=sum(g.h[0])<=sum(g.h[1])?0:1;
@@ -258,16 +271,16 @@ function act(p,type,t,s){
   push();botMaybe();
 }
 function botMaybe(){
-  if(!bot||g.rw>=0||g.cur!==1)return;
+  if(!bot||g.rw>=0||g.cur!==1||g.drawing)return;
   setTimeout(()=>{
-    if(g.rw>=0||g.cur!==1)return;
+    if(g.rw>=0||g.cur!==1||g.drawing)return;
     let opts=[];g.h[1].forEach(t=>[0,1].forEach(s=>{if(can(t,s))opts.push([t,s])}));
     if(!opts.length){act(1,'draw');return}
     opts.sort((a,b)=>(b[0][0]+b[0][1])-(a[0][0]+a[0][1]));
     act(1,'play',opts[0][0],opts[0][1]);
   },900);
 }
-const view=p=>({hand:g.h[p],opp:g.h[1-p].length,by:g.by.length,board:g.board,cur:g.cur,me:p,sc:g.sc,rd:g.rd,rw:g.rw,mw:g.mw,pts:g.pts});
+const view=p=>({hand:g.h[p],opp:g.h[1-p].length,by:g.by.length,board:g.board,cur:g.cur,me:p,sc:g.sc,rd:g.rd,rw:g.rw,mw:g.mw,pts:g.pts,dr:!!g.drawing});
 function push(){render(view(0));if(mode==='host'&&ch&&ch.readyState==='open')ch.send(JSON.stringify({t:'s',v:view(1)}))}
 // ---------- الواجهة ----------
 let V=null,sel=null,tk='',tleft=TURN,tint=null;
@@ -341,12 +354,15 @@ function render(v){
   const L_=v.board.length?v.board[0][0]:-1,R_=v.board.length?v.board[v.board.length-1][1]:-1;
   const ok=t=>!v.board.length||t[0]==L_||t[1]==L_||t[0]==R_||t[1]==R_;
   const sorted=[...v.hand].sort((a,b)=>(b[0]+b[1])-(a[0]+a[1]));
+  const pk=t=>Math.min(t[0],t[1])+'-'+Math.max(t[0],t[1]);
+  const prevH=(window._pr2===v.rd&&window._ph)?window._ph:null;
   sorted.forEach(t=>{
-    const e=tileEl(t,true);e.className='t'+(myTurn&&ok(t)?' ok':'')+(sel&&sel[0]==t[0]&&sel[1]==t[1]?' sel':'');
+    const e=tileEl(t,true);e.className='t'+(myTurn&&ok(t)?' ok':'')+(sel&&sel[0]==t[0]&&sel[1]==t[1]?' sel':'')+(prevH&&!prevH.has(pk(t))?' new':'');
     e.onclick=()=>pick(t);hand.appendChild(e);
   });
+  window._ph=new Set(v.hand.map(pk));window._pr2=v.rd;
   const any=v.hand.some(ok);
-  $('#drawBtn').classList.toggle('hide',!(myTurn&&!any));
+  $('#drawBtn').classList.toggle('hide',!(myTurn&&!any)||v.dr);
   $('#drawBtn').textContent=v.by?'اسحب':'عدّي';
   $('#sides').innerHTML='';
   $('#msg').textContent=v.mw>=0?(v.mw===m?'🏆 كسبت الماتش!':'خسرت الماتش'):v.rw>=0?(v.rw===m?'كسبت الجولة 👏 الجولة الجاية بعد ثواني':'الخصم كسب الجولة'):(myTurn?(two?'اختار الجهة اللي عايزها ◀ ▶':'دورك'):'دور الخصم...');
@@ -377,10 +393,11 @@ function showWin(v){
 function ring(on=true){const r=$('#ring');r.textContent=on?tleft:'-';r.classList.toggle('low',tleft<=8)}
 function sidesFor(t){return [0,1].filter(s=>{const L_=V.board[0]?.[0],R_=V.board[V.board.length-1]?.[1];return !V.board.length||(s==0?(t[0]==L_||t[1]==L_):(t[0]==R_||t[1]==R_))})}
 function pick(t){
-  if(!V||V.cur!==V.me||V.rw>=0)return;
+  if(!V||V.cur!==V.me||V.rw>=0||V.dr)return;
   const s=sidesFor(t);if(!s.length)return;
-  // أول ورقة (الطاولة فاضية أو فيها ورقة واحدة): تتلعب على طول من غير اختيار الجهة
-  if(s.length===1||V.board.length<=1){act(V.me,'play',t,s[0]);return}
+  const Lv=V.board[0]?.[0],Rv=V.board[V.board.length-1]?.[1];
+  // تتلعب على طول لو: جهة واحدة بس، أو أول ورقة، أو الطرفين نفس الرقم
+  if(s.length===1||V.board.length<=1||Lv===Rv){act(V.me,'play',t,s[0]);return}
   sel=(sel&&sel[0]==t[0]&&sel[1]==t[1])?null:t;render(V);
 }
 function go(s){const t=sel;sel=null;if(t)act(V.me,'play',t,s)}
