@@ -2,8 +2,11 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0a1a33">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#061430">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -168,6 +171,77 @@ html,body,#app{background:#0b2147;animation:none}
 .credit{text-align:center;font-size:12px;font-weight:700;color:#cfe0ff;opacity:.7;padding:2px 0 6px}
 /* ===== أنيميشن السحب ورقة ورقة ===== */
 #hand .t.new{animation:dropIn .4s cubic-bezier(.2,.9,.3,1.15)!important}
+/* ===== خلفية كحلي غامق زي الطاولة القماش ===== */
+html,body{background:#061430}
+#app{
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    radial-gradient(ellipse 85% 70% at 50% 42%,#1a417c 0%,#112f61 40%,#0a2147 70%,#050f26 100%);
+  animation:none;
+}
+#board{background:transparent;border:0;box-shadow:none;border-radius:0}
+.pill{background:rgba(5,15,38,.55);border:1.5px solid rgba(255,214,102,.55)}
+
+/* ===== شيل المربع نهائياً + ارتفاع الشاشة الحقيقي ===== */
+#board{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;outline:0}
+#app{height:100vh;height:100dvh}
+
+/* ===== كارت المكسب والخسارة (شكل جديد) ===== */
+.win .wc{width:min(88vw,380px);padding:28px 22px 22px;border-radius:28px;background:linear-gradient(165deg,#173d78 0%,#0a1d40 78%);border:1.5px solid rgba(255,214,102,.7);box-shadow:0 0 0 6px rgba(255,214,102,.1),0 26px 60px rgba(0,0,0,.65)}
+.win:not(.won) .wc{border-color:rgba(140,180,255,.45);box-shadow:0 0 0 6px rgba(140,180,255,.08),0 26px 60px rgba(0,0,0,.65)}
+#wt{font-size:74px;line-height:1.1}
+#wh{font-family:'Cairo',sans-serif;font-size:36px;font-weight:800;margin-top:4px;letter-spacing:.3px;background:linear-gradient(180deg,#fff3c4 0%,#ffd15c 55%,#f0a82a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 8px rgba(255,190,60,.35))}
+.win:not(.won) #wh{background:none;color:#d6e4ff;filter:none}
+#wp{display:inline-block;font-size:15px;font-weight:700;color:#ffe9a8;background:rgba(255,214,102,.12);border:1px solid rgba(255,214,102,.35);border-radius:999px;padding:4px 16px;margin:8px 0 4px}
+.win:not(.won) #wp{color:#cfe0ff;background:rgba(140,180,255,.1);border-color:rgba(140,180,255,.3)}
+#wp:empty{display:none}
+#ws{display:flex;align-items:center;justify-content:center;gap:12px;margin:14px 0 6px;letter-spacing:0;font-size:inherit}
+#ws .sep{font-size:30px;font-weight:800;opacity:.5}
+.sb{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(140,180,255,.3);border-radius:18px;padding:10px 6px 8px}
+.sb small{display:block;font-size:14px;font-weight:700;opacity:.8}
+.sb b{display:block;font-size:44px;font-weight:800;line-height:1.1}
+.sb.me{border-color:rgba(255,214,102,.75);background:rgba(255,214,102,.08)}
+.sb.me b{color:#ffe08a}
+#wb{width:100%;font-size:20px;font-weight:800;padding:13px;margin-top:16px;color:#3a2600;border-radius:16px;background:linear-gradient(180deg,#ffe48f,#f5b836);box-shadow:0 4px 0 #b9821a,0 10px 18px rgba(0,0,0,.35)}
+#wb:active{transform:translateY(2px);box-shadow:0 2px 0 #b9821a}
+
+/* ===== زرار الشاشة الكاملة + رسالة لف الموبايل ===== */
+#fsb{position:fixed;left:66px;bottom:calc(12px + env(safe-area-inset-bottom));padding:6px 12px;z-index:4;font-size:18px}
+#rot{display:none;position:fixed;inset:0;z-index:30;background:#061430;align-items:center;justify-content:center;text-align:center;padding:30px;flex-direction:column;gap:10px}
+#rot .ic{font-size:70px;animation:rotp 2s ease-in-out infinite}
+#rot p{font-size:20px;font-weight:800;margin:0}
+#rot small{opacity:.7;font-size:13px}
+@keyframes rotp{0%,30%{transform:rotate(0)}70%,100%{transform:rotate(-90deg)}}
+@media (orientation:portrait) and (max-width:700px){#rot:not(.off){display:flex}}
+
+/* ===== تصميم الموبايل بالعرض (مضغوط) ===== */
+@media (orientation:landscape) and (max-height:520px){
+  #app{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
+  .top{padding:4px 2px;gap:6px}
+  .pill{font-size:12px;padding:3px 10px;border-radius:11px}
+  #oppname{font-size:12px;margin-bottom:2px!important}
+  .back{width:11px;height:24px;margin:0 2px;border-radius:3px}
+  #msg{font-size:14px;min-height:18px}
+  .bar{padding:2px;min-height:0;gap:8px}
+  .ring{width:32px;height:32px;font-size:13px;border-width:3px}
+  button{font-size:14px;padding:6px 14px;border-radius:11px}
+  #hand{padding:8px 6px 4px;gap:clamp(6px,1.5vw,14px)}
+  #hand .t .h{width:28px;height:28px;padding:5px}
+  .h{width:30px;height:30px;padding:5px}
+  .d{width:6px;height:6px}
+  .zone{width:44px;height:44px;font-size:20px}
+  .credit{display:none}
+  .card{padding:14px 18px;max-height:94vh;overflow:auto}
+  .card h2{font-size:20px;margin-bottom:8px}
+  .card button{margin:5px 0;padding:8px}
+  .win .wc{padding:14px 20px 14px;width:min(70vw,420px)}
+  #wt{font-size:46px}
+  #wh{font-size:26px;margin-top:0}
+  .sb b{font-size:30px}
+  .sb{padding:6px}
+  #wb{margin-top:10px;padding:9px;font-size:17px}
+  #fsb,#snd{padding:4px 10px!important;font-size:16px!important}
+}
 </style>
 </head>
 <body>
@@ -185,6 +259,8 @@ html,body,#app{background:#0b2147;animation:none}
 </div>
 
 <button class="g" id="snd" onclick="mute=!mute;this.textContent=mute?'🔇':'🔊'" style="position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));padding:6px 12px;z-index:4;font-size:18px">🔊</button>
+<button class="g" id="fsb" onclick="toggleFull()">⛶</button>
+<div id="rot" onclick="this.classList.add('off')"><div class="ic">📱</div><p>لف الموبايل بالعرض عشان تلعب</p><small>أو اضغط في أي مكان للمتابعة</small></div>
 <div id="win" class="win hide"><div id="conf"></div><div class="wc"><div id="wt">🏆</div><div id="wh"></div><div id="wp"></div><div id="ws"></div><button id="wb" onclick="act(V.me,'again')"></button></div></div>
 <div id="menu">
   <div class="card">
@@ -215,6 +291,21 @@ html,body,#app{background:#0b2147;animation:none}
 const $=s=>document.querySelector(s);
 const PIPS={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 const TARGET=100, TURN=25;
+// ---------- شاشة كاملة + عرض ----------
+let fsAuto=false;
+function isFull(){return !!(document.fullscreenElement||document.webkitFullscreenElement)}
+function lockLand(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{})}catch(e){}}
+function goFull(){
+  const e=document.documentElement,f=e.requestFullscreen||e.webkitRequestFullscreen;
+  if(!f){lockLand();return}
+  try{const p=f.call(e);if(p&&p.then)p.then(lockLand).catch(()=>{});else lockLand()}catch(x){}
+}
+function toggleFull(){
+  if(isFull()){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document)}catch(e){}}
+  else goFull();
+}
+// أول لمسة على الشاشة تدخّل شاشة كاملة وتقفل العرض
+document.addEventListener('click',()=>{if(!fsAuto){fsAuto=true;if(!isFull())goFull()}},{capture:true});
 // ---------- رسم القطع ----------
 function half(n){const h=document.createElement('div');h.className='h';for(let i=0;i<9;i++){const c=document.createElement('div');if(PIPS[n].includes(i))c.className='d';h.appendChild(c)}return h}
 function tileEl(t,vert){const e=document.createElement('div');e.className='t'+(vert?' v':'');e.append(half(t[0]),half(t[1]));return e}
@@ -381,12 +472,12 @@ function showWin(v){
   const match=v.mw>=0;
   const won=(match?v.mw:v.rw)===v.me;
   w.onclick=()=>{if(V&&V.mw<0)w.classList.add('hide')};
-  $('#wt').textContent=match?(won?'🏆':'🥈'):(won?'🎉':'🥈');
+  $('#wt').textContent=match?(won?'🏆':'😔'):(won?'🎉':'💪');
   $('#wh').textContent=match?(won?'كسبت الجيم!':'خسرت الجيم'):(won?'كسبت الجولة!':'خسرت الجولة');
   $('#wp').textContent=match?'':(won?'+'+v.pts+' نقطة ليك':'+'+v.pts+' نقطة للخصم')+' · الجولة الجاية بعد ثواني';
-  $('#ws').textContent=v.sc[v.me]+' : '+v.sc[1-v.me];
+  $('#ws').innerHTML=`<div class="sb me"><small>أنت</small><b>${v.sc[v.me]}</b></div><span class="sep">:</span><div class="sb"><small>الخصم</small><b>${v.sc[1-v.me]}</b></div>`;
   $('#wb').textContent=won?'كمّل 🔥':'جيم تاني 🔥';$('#wb').classList.toggle('hide',!match);
-  w.className='win won';
+  w.className='win'+(won?' won':'');
   if(match&&won&&!winShown)confetti(); else if(!(match&&won))$('#conf').innerHTML='';
   winShown=true;
 }
