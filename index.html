@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14573f">
+<title>دومنو</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#0f4a35;color:#fff;font-family:system-ui,"Segoe UI",Tahoma,sans-serif;overflow:hidden}
+#app{height:100%;display:flex;flex-direction:column;background:radial-gradient(circle at 50% 40%,#1b7a58,#0f4a35 80%);padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;gap:8px}
+.pill{background:rgba(0,0,0,.35);border:1px solid rgba(255,215,100,.4);border-radius:14px;padding:6px 12px;font-weight:700;font-size:14px}
+.opp{text-align:center}
+.back{display:inline-block;width:14px;height:34px;margin:0 2px;background:#1c2530;border-radius:3px;border:1px solid #000}
+#board{flex:1;display:flex;align-items:center;overflow-x:auto;direction:ltr;padding:10px}
+#board .in{display:flex;align-items:center;margin:0 auto;gap:2px}
+.t{display:flex;background:#f6f1e4;border-radius:7px;border:1px solid #8a8570;box-shadow:0 2px 4px rgba(0,0,0,.4);flex:none;direction:ltr}
+.t.v{flex-direction:column}
+.h{width:34px;height:34px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:4px}
+.h+.h{border-left:1px solid #9b957f}
+.t.v .h+.h{border-left:0;border-top:1px solid #9b957f}
+.d{width:6px;height:6px;border-radius:50%;background:#111;margin:auto}
+#hand{display:flex;justify-content:center;gap:6px;padding:8px 0;flex-wrap:wrap;direction:ltr}
+#hand .t{transform:rotate(0);cursor:pointer;transition:.15s}
+#hand .t .h{width:34px;height:34px}
+#hand .t{flex-direction:column}
+#hand .t .h+.h{border-left:0;border-top:1px solid #9b957f}
+#hand .t.ok{outline:3px solid #ffd54a;transform:translateY(-8px)}
+#hand .t.sel{outline:3px solid #fff}
+.bar{display:flex;justify-content:center;gap:10px;padding:8px;min-height:54px;align-items:center;flex-wrap:wrap}
+button{font:inherit;font-weight:700;background:#ffd54a;color:#222;border:0;border-radius:12px;padding:10px 18px}
+button.g{background:rgba(0,0,0,.4);color:#fff;border:1px solid rgba(255,255,255,.3)}
+#msg{text-align:center;min-height:22px;font-weight:700;color:#ffe79a}
+.ring{width:42px;height:42px;border-radius:50%;border:3px solid #5be3a0;display:flex;align-items:center;justify-content:center;font-weight:800}
+.ring.low{border-color:#ff6b6b}
+#menu,#net{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:20px;z-index:5}
+.card{background:#16372b;border:1px solid rgba(255,215,100,.4);border-radius:18px;padding:22px;max-width:420px;width:100%;text-align:center}
+.card h2{margin:0 0 14px}
+.card button{display:block;width:100%;margin:8px 0}
+textarea{width:100%;height:90px;border-radius:10px;border:0;padding:8px;direction:ltr;font-size:11px}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <div class="pill" id="score">أنت 0 : 0 الخصم</div>
+    <div class="opp"><div id="oppname" style="font-weight:700;margin-bottom:4px">الخصم</div><div id="opp"></div></div>
+    <div class="pill" id="info">البوكس 14</div>
+  </div>
+  <div id="board"><div class="in" id="bin"></div></div>
+  <div id="msg"></div>
+  <div class="bar"><div class="ring" id="ring">25</div><span id="sides"></span><button id="drawBtn" class="hide">اسحب</button></div>
+  <div id="hand"></div>
+</div>
+
+<div id="menu">
+  <div class="card">
+    <h2>🁣 دومنو 1 ضد 1</h2>
+    <button onclick="startBot()">العب ضد الكمبيوتر</button>
+    <button class="g" onclick="netUI('host')">افتح غرفة (هوست)</button>
+    <button class="g" onclick="netUI('guest')">انضم لغرفة</button>
+    <p style="font-size:12px;opacity:.7">اللعب مع صاحبك: تبعتوا لبعض كود نسخ ولصق مرة واحدة بس. الأفضل تكونوا على نفس الواي فاي.</p>
+  </div>
+</div>
+
+<div id="net" class="hide">
+  <div class="card">
+    <h2 id="nt"></h2>
+    <p id="n1" style="font-size:13px"></p>
+    <textarea id="out" readonly></textarea>
+    <button class="g" onclick="copyOut()">نسخ الكود</button>
+    <p id="n2" style="font-size:13px"></p>
+    <textarea id="inp" placeholder="الصق الكود هنا"></textarea>
+    <button onclick="applyIn()">تأكيد</button>
+    <button class="g" onclick="location.reload()">رجوع</button>
+  </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const PIPS={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+const TARGET=60, TURN=25;
+// ---------- رسم القطع ----------
+function half(n){const h=document.createElement('div');h.className='h';for(let i=0;i<9;i++){const c=document.createElement('div');if(PIPS[n].includes(i))c.className='d';h.appendChild(c)}return h}
+function tileEl(t,vert){const e=document.createElement('div');e.className='t'+(vert?' v':'');e.append(half(t[0]),half(t[1]));return e}
+// ---------- منطق اللعبة (عند الهوست فقط) ----------
+let g,mode,me=0,ch,pc,bot=false;
+const sum=h=>h.reduce((s,t)=>s+t[0]+t[1],0);
+function newRound(){
+  const by=[];for(let i=0;i<=6;i++)for(let j=i;j<=6;j++)by.push([i,j]);
+  for(let i=by.length-1;i>0;i--){const k=Math.floor(Math.random()*(i+1));[by[i],by[k]]=[by[k],by[i]]}
+  const h=[by.splice(0,7),by.splice(0,7)];
+  let best=-1,st=0;h.forEach((hh,p)=>hh.forEach(t=>{const s=t[0]==t[1]?100+t[0]:t[0]+t[1];if(s>best){best=s;st=p}}));
+  g={by,h,board:[],cur:st,sc:g?g.sc:[0,0],rd:g?g.rd+1:1,rw:-1,mw:-1};
+  push();botMaybe();
+}
+const L=()=>g.board[0][0], R=()=>g.board[g.board.length-1][1];
+const can=(t,s)=>!g.board.length||(s==0?(t[0]==L()||t[1]==L()):(t[0]==R()||t[1]==R()));
+const has=p=>g.h[p].some(t=>can(t,0)||can(t,1));
+function blocked(){return !g.by.length&&!has(0)&&!has(1)}
+function act(p,type,t,s){
+  if(mode==='guest'){ch.send(JSON.stringify({t:'a',type,tile:t,side:s}));return}
+  if(!g||g.rw>=0||g.cur!==p)return;
+  if(type==='play'){
+    const i=g.h[p].findIndex(x=>(x[0]==t[0]&&x[1]==t[1])||(x[0]==t[1]&&x[1]==t[0]));
+    if(i<0||!can(g.h[p][i],s))return;
+    let x=g.h[p].splice(i,1)[0];
+    if(!g.board.length)g.board.push(x);
+    else if(s==0)g.board.unshift(x[1]==L()?x:[x[1],x[0]]);
+    else g.board.push(x[0]==R()?x:[x[1],x[0]]);
+    if(g.h[p].length)g.cur=1-p;
+  }else if(type==='draw'){
+    if(has(p))return;
+    while(!has(p)&&g.by.length)g.h[p].push(g.by.pop());
+    if(!has(p))g.cur=1-p;
+  }
+  let w=-1;
+  if(!g.h[0].length)w=0;else if(!g.h[1].length)w=1;
+  else if(blocked())w=sum(g.h[0])<=sum(g.h[1])?0:1;
+  if(w>=0){
+    g.rw=w;g.sc[w]+=sum(g.h[1-w]);
+    if(g.sc[w]>=TARGET)g.mw=w;else setTimeout(newRound,4500);
+  }
+  push();botMaybe();
+}
+function botMaybe(){
+  if(!bot||g.rw>=0||g.cur!==1)return;
+  setTimeout(()=>{
+    if(g.rw>=0||g.cur!==1)return;
+    let opts=[];g.h[1].forEach(t=>[0,1].forEach(s=>{if(can(t,s))opts.push([t,s])}));
+    if(!opts.length){act(1,'draw');return}
+    opts.sort((a,b)=>(b[0][0]+b[0][1])-(a[0][0]+a[0][1]));
+    act(1,'play',opts[0][0],opts[0][1]);
+  },900);
+}
+const view=p=>({hand:g.h[p],opp:g.h[1-p].length,by:g.by.length,board:g.board,cur:g.cur,me:p,sc:g.sc,rd:g.rd,rw:g.rw,mw:g.mw});
+function push(){render(view(0));if(mode==='host'&&ch&&ch.readyState==='open')ch.send(JSON.stringify({t:'s',v:view(1)}))}
+// ---------- الواجهة ----------
+let V=null,sel=null,tk='',tleft=TURN,tint=null;
+function render(v){
+  V=v;const m=v.me;
+  const mine=v.sc[m],theirs=v.sc[1-m];
+  $('#score').textContent=`أنت ${mine} : ${theirs} الخصم  (حتى ${TARGET})`;
+  $('#info').textContent=`الجولة ${v.rd} · البوكس ${v.by}`;
+  $('#opp').innerHTML='<span class="back"></span>'.repeat(v.opp);
+  const bin=$('#bin');bin.innerHTML='';
+  v.board.forEach(t=>bin.appendChild(tileEl(t,t[0]==t[1])));
+  const b=$('#board');b.scrollLeft=(b.scrollWidth-b.clientWidth)/2;
+  const hand=$('#hand');hand.innerHTML='';
+  const myTurn=v.cur===m&&v.rw<0;
+  const L_=v.board.length?v.board[0][0]:-1,R_=v.board.length?v.board[v.board.length-1][1]:-1;
+  const ok=t=>!v.board.length||t[0]==L_||t[1]==L_||t[0]==R_||t[1]==R_;
+  const sorted=[...v.hand].sort((a,b)=>(b[0]+b[1])-(a[0]+a[1]));
+  sorted.forEach(t=>{
+    const e=tileEl(t,true);e.className='t'+(myTurn&&ok(t)?' ok':'')+(sel&&sel[0]==t[0]&&sel[1]==t[1]?' sel':'');
+    e.onclick=()=>pick(t);hand.appendChild(e);
+  });
+  const any=v.hand.some(ok);
+  $('#drawBtn').classList.toggle('hide',!(myTurn&&!any));
+  $('#drawBtn').textContent=v.by?'اسحب':'عدّي';
+  $('#sides').innerHTML='';
+  $('#msg').textContent=v.mw>=0?(v.mw===m?'🏆 كسبت الماتش!':'خسرت الماتش'):v.rw>=0?(v.rw===m?'كسبت الجولة 👏 الجولة الجاية بعد ثواني':'الخصم كسب الجولة'):(myTurn?'دورك':'دور الخصم...');
+  if(v.mw>=0&&mode!=='guest'){$('#sides').innerHTML='<button onclick="location.reload()">ماتش جديد</button>'}
+  const key=v.rd+'-'+v.board.length+'-'+v.by+'-'+v.cur+'-'+v.hand.length;
+  if(key!==tk){tk=key;tleft=TURN;sel=null}
+  clearInterval(tint);
+  if(myTurn){tint=setInterval(()=>{tleft--;ring();if(tleft<=0){clearInterval(tint);auto()}},1000)}
+  ring(myTurn);
+}
+function ring(on=true){const r=$('#ring');r.textContent=on?tleft:'-';r.classList.toggle('low',tleft<=8)}
+function sidesFor(t){return [0,1].filter(s=>{const L_=V.board[0]?.[0],R_=V.board[V.board.length-1]?.[1];return !V.board.length||(s==0?(t[0]==L_||t[1]==L_):(t[0]==R_||t[1]==R_))})}
+function pick(t){
+  if(!V||V.cur!==V.me||V.rw>=0)return;
+  const s=sidesFor(t);if(!s.length)return;
+  if(s.length===1||!V.board.length){act(V.me,'play',t,s[0]);return}
+  sel=t;render(V);
+  $('#sides').innerHTML='<button onclick="go(0)">⬅ يسار</button> <button onclick="go(1)">يمين ➡</button>';
+}
+function go(s){act(V.me,'play',sel,s);sel=null}
+function auto(){
+  for(const t of V.hand){const s=sidesFor(t);if(s.length){act(V.me,'play',t,s[0]);return}}
+  act(V.me,'draw');
+}
+$('#drawBtn').onclick=()=>act(V.me,'draw');
+// ---------- أوضاع اللعب ----------
+function startBot(){$('#menu').classList.add('hide');mode='bot';bot=true;me=0;g=null;newRound()}
+const CFG={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
+const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+const dec=s=>JSON.parse(decodeURIComponent(escape(atob(s.trim()))));
+function waitIce(){return new Promise(r=>{if(pc.iceGatheringState==='complete')return r();pc.onicegatheringstatechange=()=>pc.iceGatheringState==='complete'&&r();setTimeout(r,4000)})}
+async function netUI(role){
+  $('#menu').classList.add('hide');$('#net').classList.remove('hide');
+  pc=new RTCPeerConnection(CFG);mode=role;
+  if(role==='host'){
+    $('#nt').textContent='افتح غرفة';
+    $('#n1').textContent='1) انسخ الكود ده وابعته لصاحبك';
+    $('#n2').textContent='2) الصق رده هنا واضغط تأكيد';
+    ch=pc.createDataChannel('d');hook();
+    await pc.setLocalDescription(await pc.createOffer());await waitIce();
+    $('#out').value=enc(pc.localDescription);
+  }else{
+    $('#nt').textContent='انضم لغرفة';
+    $('#n1').textContent='1) الصق كود صاحبك واضغط تأكيد';
+    $('#n2').textContent='2) هيظهر لك كود رد: ابعته له';
+    pc.ondatachannel=e=>{ch=e.channel;hook()};
+  }
+}
+async function applyIn(){
+  try{
+    const d=dec($('#inp').value);
+    if(mode==='host'){await pc.setRemoteDescription(d)}
+    else{
+      await pc.setRemoteDescription(d);
+      await pc.setLocalDescription(await pc.createAnswer());await waitIce();
+      $('#out').value=enc(pc.localDescription);
+    }
+  }catch(e){alert('الكود مش صحيح')}
+}
+function copyOut(){const o=$('#out');o.select();navigator.clipboard?.writeText(o.value)}
+function hook(){
+  ch.onopen=()=>{$('#net').classList.add('hide');$('#oppname').textContent='صاحبك';
+    if(mode==='host'){me=0;bot=false;g=null;newRound()}else me=1};
+  ch.onclose=()=>{$('#msg').textContent='الاتصال اتقطع'};
+  ch.onmessage=e=>{
+    const m=JSON.parse(e.data);
+    if(m.t==='s')render(m.v);
+    else if(m.t==='a'&&mode==='host')act(1,m.type,m.tile,m.side);
+  };
+}
+</script>
+</body>
+</html>
