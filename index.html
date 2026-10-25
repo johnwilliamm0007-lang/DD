@@ -8,6 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800&display=swap" rel="stylesheet">
@@ -270,8 +273,9 @@ html,body{background:#061430}
     <button onclick="startBot()">العب ضد الكمبيوتر</button>
     <button class="g" onclick="netUI('host')">افتح غرفة (هوست)</button>
     <button class="g" onclick="netUI('guest')">انضم لغرفة</button>
+    <button onclick="openOnlineLobby()">🌐 العب أونلاين مع لاعب</button>
     <button class="g hide" id="inst" onclick="installApp()">📲 ثبّت اللعبة</button>
-    <p style="font-size:12px;opacity:.7">اللعب مع صاحبك: أنشئ غرفة وابعت كودها لصاحبك، وهو يكتبه عند الانضمام.</p>
+    <p style="font-size:12px;opacity:.7">اللعب مع صاحبك: تبعتوا لبعض كود نسخ ولصق مرة واحدة بس. الأفضل تكونوا على نفس الواي فاي.</p>
     <p style="font-size:14px;font-weight:700;margin:10px 0 0;color:#ffe08a">تم إنشاء اللعبة بواسطة مينا عاطف</p>
   </div>
 </div>
@@ -287,6 +291,23 @@ html,body{background:#061430}
     <textarea id="inp" placeholder="الصق الكود هنا"></textarea>
     <button id="ok" onclick="applyIn()">تأكيد</button>
     <button class="g" onclick="location.reload()">رجوع</button>
+  </div>
+</div>
+
+<div id="onlineLobby" class="hide" style="position:fixed;inset:0;z-index:20;background:rgba(3,10,25,.86);backdrop-filter:blur(8px);padding:16px;overflow:auto;align-items:center;justify-content:center">
+  <div class="card" style="max-width:520px;margin:4vh auto;text-align:right">
+    <h2 style="text-align:center">🌐 اللاعبين أونلاين</h2>
+    <p id="onlineStatus" style="text-align:center;font-size:13px">جاري الاتصال...</p>
+    <label for="onlineName">اسمك داخل اللعبة</label>
+    <input id="onlineName" maxlength="18" placeholder="اكتب اسمك" style="width:100%;padding:12px;border-radius:10px;border:1px solid #456;background:#0b2147;color:white;margin:8px 0" />
+    <button class="g" style="width:100%" onclick="saveOnlineName()">حفظ الاسم</button>
+    <div style="height:1px;background:#ffffff2b;margin:14px 0"></div>
+    <h3>اللاعبون المتصلون</h3>
+    <div id="onlinePlayersList"><p>جاري تحميل اللاعبين...</p></div>
+    <div style="height:1px;background:#ffffff2b;margin:14px 0"></div>
+    <h3>الدعوات الواردة</h3>
+    <div id="onlineInvitesList"><p>لا توجد دعوات حاليًا</p></div>
+    <button class="g" style="width:100%;margin-top:14px" onclick="closeOnlineLobby()">رجوع</button>
   </div>
 </div>
 
@@ -510,102 +531,205 @@ $('#drawBtn').onclick=()=>act(V.me,'draw');
 function startBot(){$('#menu').classList.add('hide');mode='bot';bot=true;me=0;g=null;newRound()}
 const CFG={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
 const BASE='https://claude.ai/artifact/GbomhGgY6HzHRN6rNpaGUK';
-let roomPeer=null, roomCode='';
-function makeRoomCode(){return 'DOM-'+Math.random().toString(36).slice(2,6).toUpperCase()+'-'+Math.floor(100+Math.random()*900)}
+const b64u=u=>btoa(String.fromCharCode(...u)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const unb64u=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+async function pipe(bytes,S){const r=new Response(new Blob([bytes]).stream().pipeThrough(new S('deflate-raw')));return new Uint8Array(await r.arrayBuffer())}
+const enc=async o=>b64u(await pipe(new TextEncoder().encode(JSON.stringify(o)),CompressionStream));
+const dec=async s=>JSON.parse(new TextDecoder().decode(await pipe(unb64u(s),DecompressionStream)));
+function waitIce(){return new Promise(r=>{if(pc.iceGatheringState==='complete')return r();pc.onicegatheringstatechange=()=>pc.iceGatheringState==='complete'&&r();setTimeout(r,4000)})}
+function linkBase(){return /^https?:/.test(location.protocol)&&!/claude|anthropic/.test(location.hostname)?location.href.split('#')[0]:BASE}
 function adapt(conn){
-  if(!conn)return;
-  ch={send:s=>{if(conn.open)conn.send(s)},get readyState(){return conn.open?'open':'closed'}};
-  hook();let openedOnce=false;
-  const opened=()=>{if(openedOnce)return;openedOnce=true;if(ch&&ch.onopen)ch.onopen()};
-  conn.on('open',opened);
-  conn.on('data',d=>{if(ch&&ch.onmessage)ch.onmessage({data:typeof d==='string'?d:JSON.stringify(d)})});
-  conn.on('close',()=>{if(ch&&ch.onclose)ch.onclose()});
-  conn.on('error',()=>{$('#msg').textContent='حصل خطأ في الاتصال. جرّبوا كود غرفة جديد.'});
-  if(conn.open)opened();
+  ch={send:s=>conn.send(s),get readyState(){return conn.open?'open':'closed'}};
+  hook();
+  conn.on('open',()=>ch.onopen&&ch.onopen());
+  conn.on('data',d=>ch.onmessage&&ch.onmessage({data:d}));
+  conn.on('close',()=>ch.onclose&&ch.onclose());
+  if(conn.open&&ch.onopen)ch.onopen();
 }
-function resetNetUI(role){
-  $('#menu').classList.add('hide');$('#net').classList.remove('hide');mode=role;ch=null;pc=null;
-  $('#out').value='';$('#inp').value='';$('#inp').classList.remove('hide');$('#ok').classList.remove('hide');
-  $('#out').readOnly=true;
-  if(role==='host'){
-    $('#nt').textContent='إنشاء غرفة بالكلمة';
-    $('#n1').textContent='جاري إنشاء كود الغرفة...';
-    $('#n2').textContent='ابعت الكود لصاحبك وخليك فاتح اللعبة.';
-    $('#inp').classList.add('hide');$('#ok').classList.add('hide');
-    $('button[onclick="shareWA()"]').textContent='📲 ابعت الكود على واتساب';
-    $('button[onclick="copyOut()"]').textContent='نسخ كود الغرفة';
-  }else{
-    $('#nt').textContent='انضم بكود الغرفة';
-    $('#n1').textContent='اكتب كود الغرفة اللي صاحبك بعتهولك، مثل DOM-AB12-345';
-    $('#n2').textContent='اكتب نفس الكود بالضبط ثم اضغط انضمام.';
-    $('#inp').placeholder='اكتب كود الغرفة هنا';
-    $('#ok').textContent='انضمام';
-    $('#out').classList.add('hide');
-    $('button[onclick="shareWA()"]').classList.add('hide');
-    $('button[onclick="copyOut()"]').classList.add('hide');
-  }
+// لينك مباشر: الصاحب يفتح اللينك فتبدأ اللعبة فوراً (PeerJS)
+function instantHost(){
+  if(!window.Peer)return Promise.resolve(false);
+  return new Promise(res=>{
+    let done=false;const fin=v=>{if(!done){done=true;res(v)}};
+    let peer;try{peer=new Peer()}catch(e){return fin(false)}
+    setTimeout(()=>fin(false),7000);
+    peer.on('error',()=>fin(false));
+    peer.on('open',id=>{
+      $('#out').value=linkBase()+'#r'+id;
+      $('#n1').textContent='ابعت اللينك ده لصاحبك، أول ما يفتحه اللعبة هتبدأ لوحده 👇';
+      fin(true);
+    });
+    peer.on('connection',conn=>{if(!ch)adapt(conn)});
+  });
 }
 async function netUI(role){
-  resetNetUI(role);
-  if(!window.Peer){$('#n1').textContent='مكتبة الاتصال مش محمّلة. افتح اللعبة مع الإنترنت وحدّث الصفحة.';return}
+  $('#menu').classList.add('hide');$('#net').classList.remove('hide');
+  mode=role;
   if(role==='host'){
-    roomCode=makeRoomCode();
-    try{
-      roomPeer=new Peer(roomCode);
-      let settled=false;
-      const timeout=setTimeout(()=>{if(!settled){settled=true;$('#n1').textContent='تعذر إنشاء الغرفة. جرّب مرة أخرى.';try{roomPeer.destroy()}catch(e){}}},12000);
-      roomPeer.on('open',id=>{
-        if(settled)return;settled=true;clearTimeout(timeout);
-        $('#out').value=id;$('#out').classList.remove('hide');
-        $('#n1').textContent='كود غرفتك: '+id;
-        $('#n2').textContent='ابعته لصاحبك، وخليك فاتح الصفحة لحد ما يتصل.';
-      });
-      roomPeer.on('connection',conn=>{if(!ch)adapt(conn);else conn.close()});
-      roomPeer.on('error',err=>{
-        if(settled){$('#n1').textContent='حصلت مشكلة في الاتصال. جرّب إنشاء غرفة جديدة.';return}
-        settled=true;clearTimeout(timeout);
-        $('#n1').textContent='الكود مش متاح أو خادم الاتصال رفضه. اضغط رجوع وجرب غرفة جديدة.';
-      });
-    }catch(e){$('#n1').textContent='تعذر إنشاء الغرفة. جرّب مرة أخرى.'}
+    $('#nt').textContent='افتح غرفة';$('#n1').textContent='جاري تجهيز اللينك...';$('#n2').textContent='';
+    $('#inp').classList.add('hide');$('#ok').classList.add('hide');
+    if(await instantHost())return;
+    $('#inp').classList.remove('hide');$('#ok').classList.remove('hide');
+  }
+  pc=new RTCPeerConnection(CFG);
+  if(role==='host'){
+    $('#nt').textContent='افتح غرفة';
+    $('#n1').textContent='1) ابعت اللينك ده لصاحبك على واتساب';
+    $('#n2').textContent='2) لما يرد عليك، الصق رسالته هنا واضغط تأكيد';
+    ch=pc.createDataChannel('d');hook();
+    await pc.setLocalDescription(await pc.createOffer());await waitIce();
+    $('#out').value=linkBase()+'#o'+await enc(pc.localDescription);
+  }else{
+    $('#nt').textContent='انضم لغرفة';
+    $('#n1').textContent='1) الصق لينك صاحبك واضغط تأكيد';
+    $('#n2').textContent='2) هيظهر لك لينك الرد: ابعته له';
+    pc.ondatachannel=e=>{ch=e.channel;hook()};
   }
 }
-function joinRoom(){
-  const code=($('#inp').value||'').trim().toUpperCase();
-  if(!code){alert('اكتب كود الغرفة الأول');return}
-  if(!window.Peer){$('#n1').textContent='مكتبة الاتصال مش محمّلة. افتح اللعبة مع الإنترنت وحدّث الصفحة.';return}
-  $('#ok').disabled=true;$('#n1').textContent='جاري الاتصال بالغرفة...';
-  try{
-    const peer=new Peer();
-    let finished=false;
-    const timeout=setTimeout(()=>{if(!finished){finished=true;$('#ok').disabled=false;$('#n1').textContent='الاتصال اتأخر. تأكد أن صاحبك فاتح الغرفة وجرب تاني.';try{peer.destroy()}catch(e){}}},15000);
-    peer.on('open',()=>{
-      const conn=peer.connect(code,{reliable:true});
-      adapt(conn);
-      conn.on('open',()=>{finished=true;clearTimeout(timeout);$('#ok').disabled=false;});
-      conn.on('error',()=>{if(!finished){finished=true;clearTimeout(timeout);$('#ok').disabled=false;$('#n1').textContent='مش قادر يتصل. راجع الكود وتأكد أن صاحبك فاتح الغرفة.'}});
-    });
-    peer.on('error',err=>{if(!finished){finished=true;clearTimeout(timeout);$('#ok').disabled=false;$('#n1').textContent='فشل الاتصال. تأكد من الكود وحاول مرة أخرى.'}});
-  }catch(e){$('#ok').disabled=false;$('#n1').textContent='فشل الاتصال. جرّب مرة أخرى.'}
+const tok=s=>{const m=s.match(/#?([oa][A-Za-z0-9_\-]{100,})/);return m&&m[1]};
+async function guestAnswer(d){
+  await pc.setRemoteDescription(d);
+  await pc.setLocalDescription(await pc.createAnswer());await waitIce();
+  $('#out').value=linkBase()+'#a'+await enc(pc.localDescription);
 }
-function applyIn(){if(mode==='guest')joinRoom()}
+async function applyIn(){
+  try{
+    const t=tok($('#inp').value);
+    const d=await dec(t.slice(1));
+    if(mode==='host')await pc.setRemoteDescription(d);
+    else await guestAnswer(d);
+  }catch(e){alert('اللينك مش صحيح')}
+}
 function copyOut(){const o=$('#out');o.select();try{navigator.clipboard.writeText(o.value)}catch(e){document.execCommand('copy')}}
 function shareWA(){
   const u=$('#out').value;if(!u)return;
-  const txt='تعالى نلعب دومنو 🎲 افتح اللعبة واكتب كود الغرفة ده: '+u;
+  const txt=(mode==='host'?'تعالى نلعب دومنو 🎲 افتح اللينك:\n':'ده ردي، الصقه في اللعبة:\n')+u;
   if(navigator.share){navigator.share({text:txt}).catch(()=>{})}
   else window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
 }
-
+(async()=>{
+  const h=location.hash.slice(1);
+  if(h[0]==='r'&&h.length>10){
+    mode='guest';$('#menu').classList.add('hide');$('#msg').textContent='جاري الاتصال بالغرفة...';
+    if(!window.Peer){$('#msg').textContent='مش قادر يتصل بالغرفة';return}
+    const peer=new Peer();
+    peer.on('error',()=>{$('#msg').textContent='مش قادر يتصل بالغرفة، تأكد من اللينك'});
+    peer.on('open',()=>adapt(peer.connect(h.slice(1),{reliable:true})));
+    return;
+  }
+  if(h[0]!=='o'||h.length<100)return;
+  try{
+    await netUI('guest');
+    $('#n1').textContent='جاري تجهيز الرد...';$('#n2').textContent='';
+    $('#inp').classList.add('hide');$('#ok').classList.add('hide');
+    await guestAnswer(await dec(h.slice(1)));
+    $('#n1').textContent='ابعت اللينك ده لصاحبك عشان تبدأوا اللعب 👇';
+  }catch(e){$('#n1').textContent='اللينك مش صحيح'}
+})();
 function hook(){
-  ch.onopen=()=>{$('#net').classList.add('hide');$('#oppname').textContent='صاحبك';
-    if(mode==='host'){me=0;bot=false;g=null;newRound()}else{me=1;bot=false}};
-  ch.onclose=()=>{$('#msg').textContent='الاتصال اتقطع'};
+  ch.onopen=()=>{$('#net').classList.add('hide');$('#onlineLobby').classList.add('hide');$('#oppname').textContent=window.onlineOpponentName||'صاحبك';
+    if(mode==='host'){me=0;bot=false;g=null;newRound()}else me=1};
+  ch.onclose=()=>{$('#msg').textContent='الاتصال اتقطع';ch=null;};
   ch.onmessage=e=>{
-    const m=JSON.parse(e.data);
-    if(m.t==='s')render(m.v);
-    else if(m.t==='a'&&mode==='host')act(1,m.type,m.tile,m.side);
+    try{const m=JSON.parse(e.data);
+      if(m.t==='s')render(m.v);
+      else if(m.t==='a'&&mode==='host')act(1,m.type,m.tile,m.side);
+    }catch(err){console.error('رسالة لعبة غير صالحة',err)}
   };
 }
+
+// ========== لوبي أونلاين Firebase + PeerJS ==========
+const firebaseConfig={
+  apiKey:'AIzaSyB3I4tNL6Fc2_6JPI6PQV1AeJMxlONaA5c',
+  authDomain:'dominolan.firebaseapp.com',
+  databaseURL:'https://dominolan-default-rtdb.firebaseio.com',
+  projectId:'dominolan',
+  storageBucket:'dominolan.firebasestorage.app',
+  messagingSenderId:'592222238054',
+  appId:'1:592222238054:web:a8f0181526b558086c84a7',
+  measurementId:'G-QTQLCHGCC3'
+};
+let fbAuth=null,fbDB=null,fbUser=null,onlinePeer=null,onlinePeerId='',onlineLobbyReady=false;
+let onlinePlayersRef=null,onlineInvitesRef=null,onlinePlayerCache={},onlineInviteCache={};
+let onlineName=localStorage.getItem('domino_online_name')||('لاعب '+Math.floor(1000+Math.random()*9000));
+window.onlineOpponentName='صاحبك';
+function safeText(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function lobbyStatus(s){const e=$('#onlineStatus');if(e)e.textContent=s}
+function initOnlineFirebase(){
+  if(onlineLobbyReady)return Promise.resolve(true);
+  if(!window.firebase){lobbyStatus('تعذر تحميل Firebase. افحص اتصال الإنترنت.');return Promise.resolve(false)}
+  try{if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);fbAuth=firebase.auth();fbDB=firebase.database();}
+  catch(e){console.error(e);lobbyStatus('تعذر تشغيل خدمة الأونلاين.');return Promise.resolve(false)}
+  return fbAuth.signInAnonymously().then(async cred=>{
+    fbUser=cred.user;
+    onlinePeer=new Peer(undefined,{debug:0});
+    await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('PeerJS timeout')),12000);onlinePeer.once('open',id=>{clearTimeout(timer);onlinePeerId=id;resolve()});onlinePeer.once('error',err=>{clearTimeout(timer);reject(err)})});
+    const myRef=fbDB.ref('onlinePlayers/'+fbUser.uid);
+    await myRef.onDisconnect().remove();
+    await myRef.set({uid:fbUser.uid,name:onlineName,peerId:onlinePeerId,status:'online',updatedAt:firebase.database.ServerValue.TIMESTAMP});
+    myRef.on('value',snap=>{if(!snap.exists()&&fbUser&&onlinePeerId)myRef.set({uid:fbUser.uid,name:onlineName,peerId:onlinePeerId,status:'online',updatedAt:firebase.database.ServerValue.TIMESTAMP}).catch(()=>{})});
+    onlinePlayersRef=fbDB.ref('onlinePlayers');
+    onlinePlayersRef.on('value',snap=>{onlinePlayerCache=snap.val()||{};renderOnlinePlayers()});
+    onlineInvitesRef=fbDB.ref('onlineInvites');
+    onlineInvitesRef.on('value',snap=>{onlineInviteCache=snap.val()||{};renderOnlineInvites()});
+    onlinePeer.on('connection',conn=>{
+      const meta=conn.metadata||{};const inviteId=meta.inviteId;
+      if(!inviteId){conn.close();return}
+      fbDB.ref('onlineInvites/'+inviteId).once('value').then(snap=>{
+        const inv=snap.val();
+        if(!inv||inv.status!=='accepted'||inv.from!==fbUser.uid||inv.to!==meta.fromUid){conn.close();return}
+        window.onlineOpponentName=inv.fromName||'صاحبك';mode='host';bot=false;ch=null;adapt(conn);
+      }).catch(()=>conn.close());
+    });
+    onlineLobbyReady=true;lobbyStatus('متصل — ظاهر الآن للاعبين الآخرين');renderOnlinePlayers();return true;
+  }).catch(err=>{console.error('Online lobby error:',err);lobbyStatus('فشل الاتصال: '+(err.message||'تحقق من إعدادات Firebase وPeerJS'));return false});
+}
+async function openOnlineLobby(){
+  $('#menu').classList.add('hide');$('#onlineLobby').classList.remove('hide');$('#onlineLobby').style.display='block';
+  $('#onlineName').value=onlineName;lobbyStatus('جاري الاتصال بخدمة الأونلاين...');
+  await initOnlineFirebase();
+}
+function closeOnlineLobby(){ $('#onlineLobby').classList.add('hide');$('#onlineLobby').style.display='';$('#menu').classList.remove('hide'); }
+async function saveOnlineName(){
+  const v=$('#onlineName').value.trim().slice(0,18);if(!v){alert('اكتب اسمًا الأول');return}
+  onlineName=v;localStorage.setItem('domino_online_name',v);
+  if(fbUser&&onlinePeerId)await fbDB.ref('onlinePlayers/'+fbUser.uid).update({name:v,peerId:onlinePeerId,status:'online',updatedAt:firebase.database.ServerValue.TIMESTAMP});
+  lobbyStatus('تم حفظ الاسم');renderOnlinePlayers();
+}
+function renderOnlinePlayers(){
+  const box=$('#onlinePlayersList');if(!box)return;
+  if(!fbUser){box.innerHTML='<p>جاري الاتصال...</p>';return}
+  const arr=Object.values(onlinePlayerCache).filter(p=>p&&p.uid&&p.uid!==fbUser.uid&&p.status==='online'&&p.peerId);
+  if(!arr.length){box.innerHTML='<p style="opacity:.75">مفيش لاعبين متصلين حاليًا. خلي صاحبك يفتح اللعبة واللوبي.</p>';return}
+  box.innerHTML=arr.map(p=>`<div style="display:flex;align-items:center;gap:8px;justify-content:space-between;padding:10px;margin:7px 0;background:#ffffff10;border:1px solid #ffffff20;border-radius:12px"><div><b>${safeText(p.name||'لاعب')}</b><div style="font-size:11px;opacity:.65">🟢 متصل</div></div><button onclick="sendOnlineInvite('${safeText(p.uid)}','${safeText(p.name||'لاعب')}')">دعوة للعب</button></div>`).join('');
+}
+async function sendOnlineInvite(toUid,toName){
+  if(!fbUser||!onlinePeerId){alert('استنى لحد ما الاتصال يكتمل');return}
+  if(!onlinePlayerCache[toUid]){alert('اللاعب خرج من اللوبي');return}
+  const ref=fbDB.ref('onlineInvites').push();
+  await ref.set({id:ref.key,from:fbUser.uid,fromName:onlineName,to:toUid,toName,status:'pending',createdAt:firebase.database.ServerValue.TIMESTAMP});
+  lobbyStatus('بعتّ دعوة إلى '+toName+' — مستني القبول');
+  const id=ref.key;ref.on('value',snap=>{const v=snap.val();if(v&&v.status==='rejected'){lobbyStatus(toName+' رفض الدعوة');ref.off();setTimeout(()=>ref.remove().catch(()=>{}),10000)}else if(v&&v.status==='accepted'){lobbyStatus(toName+' قبل الدعوة، جاري انتظار اتصال اللاعب...');ref.off();window.onlineOpponentName=toName;mode='host';bot=false;ch=null;setTimeout(()=>{if(!ch)lobbyStatus('الدعوة اتقبلت لكن الاتصال لم يكتمل. جرّب مرة أخرى')},15000)}});
+}
+function renderOnlineInvites(){
+  const box=$('#onlineInvitesList');if(!box)return;
+  if(!fbUser){box.innerHTML='<p>جاري الاتصال...</p>';return}
+  const arr=Object.entries(onlineInviteCache).filter(([id,i])=>i&&i.to===fbUser.uid&&i.status==='pending');
+  if(!arr.length){box.innerHTML='<p style="opacity:.75">لا توجد دعوات حاليًا</p>';return}
+  box.innerHTML=arr.map(([id,i])=>`<div style="padding:10px;margin:7px 0;background:#ffffff10;border:1px solid #ffffff20;border-radius:12px"><b>${safeText(i.fromName||'لاعب')}</b> دعاك للعب<div style="display:flex;gap:8px;margin-top:8px"><button style="flex:1" onclick="answerOnlineInvite('${safeText(id)}',true)">قبول</button><button class="g" style="flex:1" onclick="answerOnlineInvite('${safeText(id)}',false)">رفض</button></div></div>`).join('');
+}
+async function answerOnlineInvite(id,accept){
+  const ref=fbDB.ref('onlineInvites/'+id);const snap=await ref.once('value');const inv=snap.val();
+  if(!inv||inv.to!==fbUser.uid||inv.status!=='pending'){alert('الدعوة انتهت أو لم تعد متاحة');return}
+  if(!accept){await ref.update({status:'rejected'});return}
+  const player=onlinePlayerCache[inv.from];if(!player||!player.peerId){alert('اللاعب خرج من اللعبة');await ref.update({status:'rejected'});return}
+  window.onlineOpponentName=inv.fromName||'صاحبك';await ref.update({status:'accepted'});lobbyStatus('قبلت الدعوة، جاري الاتصال بـ '+window.onlineOpponentName+'...');
+  mode='guest';bot=false;ch=null;
+  const conn=onlinePeer.connect(player.peerId,{reliable:true,metadata:{inviteId:id,fromUid:fbUser.uid}});
+  conn.on('open',()=>{adapt(conn);$('#onlineLobby').classList.add('hide')});
+  conn.on('error',err=>{console.error(err);lobbyStatus('فشل الاتصال. اقفل اللوبي وافتحه وجرب تاني')});
+}
+window.addEventListener('beforeunload',()=>{try{if(fbUser&&fbDB)fbDB.ref('onlinePlayers/'+fbUser.uid).remove();if(onlinePlayersRef)onlinePlayersRef.off();if(onlineInvitesRef)onlineInvitesRef.off();if(onlinePeer)onlinePeer.destroy()}catch(e){}});
 </script>
 </body>
 </html>
