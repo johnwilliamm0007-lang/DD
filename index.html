@@ -271,7 +271,7 @@ html,body{background:#061430}
     <button class="g" onclick="netUI('host')">افتح غرفة (هوست)</button>
     <button class="g" onclick="netUI('guest')">انضم لغرفة</button>
     <button class="g hide" id="inst" onclick="installApp()">📲 ثبّت اللعبة</button>
-    <p style="font-size:12px;opacity:.7">اللعب مع صاحبك: تبعتوا لبعض كود نسخ ولصق مرة واحدة بس. الأفضل تكونوا على نفس الواي فاي.</p>
+    <p style="font-size:12px;opacity:.7">اللعب مع صاحبك: أنشئ غرفة وابعت كودها لصاحبك، وهو يكتبه عند الانضمام.</p>
     <p style="font-size:14px;font-weight:700;margin:10px 0 0;color:#ffe08a">تم إنشاء اللعبة بواسطة مينا عاطف</p>
   </div>
 </div>
@@ -319,7 +319,7 @@ document.addEventListener('click',()=>{if(!fsAuto){fsAuto=true;if(!isFull())goFu
 function half(n){const h=document.createElement('div');h.className='h';for(let i=0;i<9;i++){const c=document.createElement('div');if(PIPS[n].includes(i))c.className='d';h.appendChild(c)}return h}
 function tileEl(t,vert){const e=document.createElement('div');e.className='t'+(vert?' v':'');e.append(half(t[0]),half(t[1]));return e}
 // ---------- منطق اللعبة (عند الهوست فقط) ----------
-let g,mode,me=0,ch,pc,bot=false,roomPeer=null;
+let g,mode,me=0,ch,pc,bot=false;
 const sum=h=>h.reduce((s,t)=>s+t[0]+t[1],0);
 function newRound(){
   const by=[];for(let i=0;i<=6;i++)for(let j=i;j<=6;j++)by.push([i,j]);
@@ -334,7 +334,7 @@ const can=(t,s)=>!g.board.length||(s==0?(t[0]==L()||t[1]==L()):(t[0]==R()||t[1]=
 const has=p=>g.h[p].some(t=>can(t,0)||can(t,1));
 function blocked(){return !g.by.length&&!has(0)&&!has(1)}
 function act(p,type,t,s){
-  if(mode==='guest'){if(ch&&ch.readyState==='open')ch.send(JSON.stringify({t:'a',type,tile:t,side:s}));else $('#msg').textContent='لسه الاتصال مش جاهز، استنى لحظة وجرب تاني.';return}
+  if(mode==='guest'){ch.send(JSON.stringify({t:'a',type,tile:t,side:s}));return}
   if(type==='again'){if(g&&g.mw>=0){g.sc=[0,0];newRound()}return}
   if(!g||g.rw>=0||g.cur!==p||g.drawing)return;
   if(type==='play'){
@@ -510,158 +510,98 @@ $('#drawBtn').onclick=()=>act(V.me,'draw');
 function startBot(){$('#menu').classList.add('hide');mode='bot';bot=true;me=0;g=null;newRound()}
 const CFG={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
 const BASE='https://claude.ai/artifact/GbomhGgY6HzHRN6rNpaGUK';
-const b64u=u=>{
-  let bin='';
-  for(let i=0;i<u.length;i+=0x8000)bin+=String.fromCharCode(...u.subarray(i,Math.min(i+0x8000,u.length)));
-  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-};
-const unb64u=s=>{
-  s=s.replace(/-/g,'+').replace(/_/g,'/');
-  while(s.length%4)s+='=';
-  const bin=atob(s),u=new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
-  return u;
-};
-// بدون CompressionStream عشان يشتغل على المتصفحات المختلفة
-const enc=async o=>b64u(new TextEncoder().encode(JSON.stringify(o)));
-const dec=async s=>JSON.parse(new TextDecoder().decode(unb64u(s)));
-function waitIce(peerConnection=pc){
-  return new Promise(resolve=>{
-    if(!peerConnection||peerConnection.iceGatheringState==='complete')return resolve();
-    let done=false;
-    const finish=()=>{
-      if(done)return;done=true;clearTimeout(timer);
-      peerConnection.removeEventListener('icegatheringstatechange',check);
-      resolve();
-    };
-    const check=()=>{if(peerConnection.iceGatheringState==='complete')finish()};
-    const timer=setTimeout(finish,7000);
-    peerConnection.addEventListener('icegatheringstatechange',check);
-  });
-}
-function linkBase(){return /^https?:/.test(location.protocol)&&!/claude|anthropic/.test(location.hostname)?location.href.split('#')[0]:BASE}
+let roomPeer=null, roomCode='';
+function makeRoomCode(){return 'DOM-'+Math.random().toString(36).slice(2,6).toUpperCase()+'-'+Math.floor(100+Math.random()*900)}
 function adapt(conn){
   if(!conn)return;
   ch={send:s=>{if(conn.open)conn.send(s)},get readyState(){return conn.open?'open':'closed'}};
-  hook();
-  let didOpen=false;
-  const opened=()=>{if(didOpen)return;didOpen=true;if(ch&&ch.onopen)ch.onopen()};
+  hook();let openedOnce=false;
+  const opened=()=>{if(openedOnce)return;openedOnce=true;if(ch&&ch.onopen)ch.onopen()};
   conn.on('open',opened);
   conn.on('data',d=>{if(ch&&ch.onmessage)ch.onmessage({data:typeof d==='string'?d:JSON.stringify(d)})});
   conn.on('close',()=>{if(ch&&ch.onclose)ch.onclose()});
-  conn.on('error',()=>{$('#msg').textContent='حصل خطأ في الاتصال. جرّبوا فتح غرفة جديدة.'});
-  // مهم: لو الاتصال مفتوح بالفعل، شغّل بداية اللعبة فورًا
+  conn.on('error',()=>{$('#msg').textContent='حصل خطأ في الاتصال. جرّبوا كود غرفة جديد.'});
   if(conn.open)opened();
 }
-// اتصال مباشر عبر PeerJS
-function instantHost(){
-  if(!window.Peer)return Promise.resolve(false);
-  return new Promise(resolve=>{
-    let settled=false,timer=null;
-    roomPeer=null;ch=null;
-    const finish=ok=>{
-      if(settled)return;settled=true;clearTimeout(timer);
-      if(!ok&&roomPeer){try{roomPeer.destroy()}catch(e){}roomPeer=null}
-      resolve(ok);
-    };
-    try{roomPeer=new Peer()}catch(e){finish(false);return}
-    timer=setTimeout(()=>finish(false),10000);
-    roomPeer.on('error',()=>finish(false));
-    roomPeer.on('open',id=>{
-      $('#out').value=linkBase()+'#r'+id;
-      $('#n1').textContent='اللينك جاهز! ابعته لصاحبك، وخليك فاتح الصفحة لحد ما يتصل 👇';
-      $('#n2').textContent='لو الاتصال ما بدأش خلال ثوانٍ، استخدم طريقة الكود البديلة.';
-      finish(true);
-    });
-    roomPeer.on('connection',conn=>{
-      if(ch){try{conn.close()}catch(e){};return}
-      adapt(conn);
-    });
-  });
+function resetNetUI(role){
+  $('#menu').classList.add('hide');$('#net').classList.remove('hide');mode=role;ch=null;pc=null;
+  $('#out').value='';$('#inp').value='';$('#inp').classList.remove('hide');$('#ok').classList.remove('hide');
+  $('#out').readOnly=true;
+  if(role==='host'){
+    $('#nt').textContent='إنشاء غرفة بالكلمة';
+    $('#n1').textContent='جاري إنشاء كود الغرفة...';
+    $('#n2').textContent='ابعت الكود لصاحبك وخليك فاتح اللعبة.';
+    $('#inp').classList.add('hide');$('#ok').classList.add('hide');
+    $('button[onclick="shareWA()"]').textContent='📲 ابعت الكود على واتساب';
+    $('button[onclick="copyOut()"]').textContent='نسخ كود الغرفة';
+  }else{
+    $('#nt').textContent='انضم بكود الغرفة';
+    $('#n1').textContent='اكتب كود الغرفة اللي صاحبك بعتهولك، مثل DOM-AB12-345';
+    $('#n2').textContent='اكتب نفس الكود بالضبط ثم اضغط انضمام.';
+    $('#inp').placeholder='اكتب كود الغرفة هنا';
+    $('#ok').textContent='انضمام';
+    $('#out').classList.add('hide');
+    $('button[onclick="shareWA()"]').classList.add('hide');
+    $('button[onclick="copyOut()"]').classList.add('hide');
+  }
 }
 async function netUI(role){
-  $('#menu').classList.add('hide');$('#net').classList.remove('hide');
-  mode=role;ch=null;pc=null;
+  resetNetUI(role);
+  if(!window.Peer){$('#n1').textContent='مكتبة الاتصال مش محمّلة. افتح اللعبة مع الإنترنت وحدّث الصفحة.';return}
   if(role==='host'){
-    $('#nt').textContent='افتح غرفة';$('#n1').textContent='جاري تجهيز اللينك...';$('#n2').textContent='';
-    $('#inp').classList.add('hide');$('#ok').classList.add('hide');
-    if(await instantHost())return;
-    $('#n1').textContent='الاتصال المباشر غير متاح. استخدم طريقة الكود البديلة.';
-    $('#n2').textContent='ابعت كود العرض لصاحبك، وبعد ما يرد بكود الإجابة الصقه هنا.';
-    $('#inp').classList.remove('hide');$('#ok').classList.remove('hide');
-  }
-  pc=new RTCPeerConnection(CFG);
-  if(role==='host'){
-    $('#nt').textContent='افتح غرفة';
-    $('#n1').textContent='ابعت اللينك/الكود ده لصاحبك';
-    $('#n2').textContent='بعد ما صاحبك يبعت كود الرد، الصقه في المربع واضغط تأكيد';
-    ch=pc.createDataChannel('d');hook();
-    await pc.setLocalDescription(await pc.createOffer());await waitIce(pc);
-    $('#out').value=linkBase()+'#o'+await enc(pc.localDescription);
-  }else{
-    $('#nt').textContent='انضم لغرفة';
-    $('#n1').textContent='الصق كود العرض اللي بعته صاحبك واضغط تأكيد';
-    $('#n2').textContent='بعدها انسخ كود الرد وابعتْه لصاحبك';
-    pc.ondatachannel=e=>{ch=e.channel;hook();if(ch.readyState==='open'&&ch.onopen)ch.onopen()};
+    roomCode=makeRoomCode();
+    try{
+      roomPeer=new Peer(roomCode);
+      let settled=false;
+      const timeout=setTimeout(()=>{if(!settled){settled=true;$('#n1').textContent='تعذر إنشاء الغرفة. جرّب مرة أخرى.';try{roomPeer.destroy()}catch(e){}}},12000);
+      roomPeer.on('open',id=>{
+        if(settled)return;settled=true;clearTimeout(timeout);
+        $('#out').value=id;$('#out').classList.remove('hide');
+        $('#n1').textContent='كود غرفتك: '+id;
+        $('#n2').textContent='ابعته لصاحبك، وخليك فاتح الصفحة لحد ما يتصل.';
+      });
+      roomPeer.on('connection',conn=>{if(!ch)adapt(conn);else conn.close()});
+      roomPeer.on('error',err=>{
+        if(settled){$('#n1').textContent='حصلت مشكلة في الاتصال. جرّب إنشاء غرفة جديدة.';return}
+        settled=true;clearTimeout(timeout);
+        $('#n1').textContent='الكود مش متاح أو خادم الاتصال رفضه. اضغط رجوع وجرب غرفة جديدة.';
+      });
+    }catch(e){$('#n1').textContent='تعذر إنشاء الغرفة. جرّب مرة أخرى.'}
   }
 }
-const tok=s=>{const m=String(s||'').match(/#?([oa][A-Za-z0-9_-]{20,})/);return m&&m[1]};
-async function guestAnswer(d){
-  await pc.setRemoteDescription(d);
-  await pc.setLocalDescription(await pc.createAnswer());await waitIce(pc);
-  $('#out').value=linkBase()+'#a'+await enc(pc.localDescription);
-}
-async function applyIn(){
+function joinRoom(){
+  const code=($('#inp').value||'').trim().toUpperCase();
+  if(!code){alert('اكتب كود الغرفة الأول');return}
+  if(!window.Peer){$('#n1').textContent='مكتبة الاتصال مش محمّلة. افتح اللعبة مع الإنترنت وحدّث الصفحة.';return}
+  $('#ok').disabled=true;$('#n1').textContent='جاري الاتصال بالغرفة...';
   try{
-    const t=tok($('#inp').value);
-    if(!t)throw new Error('missing code');
-    const d=await dec(t.slice(1));
-    if(mode==='host'){
-      if(!pc)throw new Error('no connection');
-      await pc.setRemoteDescription(d);
-      $('#n1').textContent='تم استلام الرد. جاري الاتصال...';
-    }else await guestAnswer(d);
-  }catch(e){alert('الكود غير صحيح أو ناقص. انسخه كاملًا وحاول مرة أخرى.')}
+    const peer=new Peer();
+    let finished=false;
+    const timeout=setTimeout(()=>{if(!finished){finished=true;$('#ok').disabled=false;$('#n1').textContent='الاتصال اتأخر. تأكد أن صاحبك فاتح الغرفة وجرب تاني.';try{peer.destroy()}catch(e){}}},15000);
+    peer.on('open',()=>{
+      const conn=peer.connect(code,{reliable:true});
+      adapt(conn);
+      conn.on('open',()=>{finished=true;clearTimeout(timeout);$('#ok').disabled=false;});
+      conn.on('error',()=>{if(!finished){finished=true;clearTimeout(timeout);$('#ok').disabled=false;$('#n1').textContent='مش قادر يتصل. راجع الكود وتأكد أن صاحبك فاتح الغرفة.'}});
+    });
+    peer.on('error',err=>{if(!finished){finished=true;clearTimeout(timeout);$('#ok').disabled=false;$('#n1').textContent='فشل الاتصال. تأكد من الكود وحاول مرة أخرى.'}});
+  }catch(e){$('#ok').disabled=false;$('#n1').textContent='فشل الاتصال. جرّب مرة أخرى.'}
 }
+function applyIn(){if(mode==='guest')joinRoom()}
 function copyOut(){const o=$('#out');o.select();try{navigator.clipboard.writeText(o.value)}catch(e){document.execCommand('copy')}}
 function shareWA(){
   const u=$('#out').value;if(!u)return;
-  const txt=(mode==='host'?'تعالى نلعب دومنو 🎲 افتح اللينك:\n':'ده ردي، الصقه في اللعبة:\n')+u;
+  const txt='تعالى نلعب دومنو 🎲 افتح اللعبة واكتب كود الغرفة ده: '+u;
   if(navigator.share){navigator.share({text:txt}).catch(()=>{})}
   else window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
 }
-(async()=>{
-  const h=location.hash.slice(1);
-  if(h[0]==='r'&&h.length>10){
-    mode='guest';$('#menu').classList.add('hide');$('#msg').textContent='جاري الاتصال بالغرفة...';
-    if(!window.Peer){$('#msg').textContent='مش قادر يتصل بالغرفة';return}
-    const peer=new Peer();roomPeer=peer;
-    peer.on('error',()=>{$('#msg').textContent='مش قادر يتصل بالغرفة. اتأكد إن صاحبك فاتح الصفحة وإن اللينك كامل.'});
-    peer.on('open',()=>{
-      const conn=peer.connect(h.slice(1),{reliable:true});
-      adapt(conn);
-      setTimeout(()=>{if(!conn.open)$('#msg').textContent='الاتصال لسه ما اكتملش. خلي صاحبك فاتح الغرفة وجربوا تاني.'},12000);
-    });
-    return;
-  }
-  if(h[0]!=='o'||h.length<100)return;
-  try{
-    await netUI('guest');
-    $('#n1').textContent='جاري تجهيز الرد...';$('#n2').textContent='';
-    $('#inp').classList.add('hide');$('#ok').classList.add('hide');
-    await guestAnswer(await dec(h.slice(1)));
-    $('#n1').textContent='ابعت اللينك ده لصاحبك عشان تبدأوا اللعب 👇';
-  }catch(e){$('#n1').textContent='اللينك مش صحيح'}
-})();
+
 function hook(){
-  ch.onopen=()=>{
-    $('#net').classList.add('hide');$('#oppname').textContent='صاحبك';
-    $('#msg').textContent='تم الاتصال بنجاح!';
-    if(mode==='host'){me=0;bot=false;g=null;newRound()}else{me=1}
-  };
+  ch.onopen=()=>{$('#net').classList.add('hide');$('#oppname').textContent='صاحبك';
+    if(mode==='host'){me=0;bot=false;g=null;newRound()}else{me=1;bot=false}};
   ch.onclose=()=>{$('#msg').textContent='الاتصال اتقطع'};
   ch.onmessage=e=>{
-    let m;try{m=typeof e.data==='string'?JSON.parse(e.data):e.data}catch(err){return}
+    const m=JSON.parse(e.data);
     if(m.t==='s')render(m.v);
     else if(m.t==='a'&&mode==='host')act(1,m.type,m.tile,m.side);
   };
