@@ -162,6 +162,10 @@ html,body,#app{background:#0b2147;animation:none}
 #wp{font-size:17px;font-weight:700;color:#cfe0ff;min-height:4px;margin:2px 0 6px}
 #ws{margin-bottom:6px}
 #wb{margin-top:14px}
+/* ===== ضوء أصفر خفيف للورق اللي تقدر تلعبه ===== */
+#hand .t.ok{animation:none;transform:translateY(-8px);box-shadow:0 0 0 2px rgba(255,224,102,.9),0 0 14px rgba(255,224,102,.55),0 6px 12px rgba(0,0,0,.4)}
+#hand .t.sel{animation:none;transform:translateY(-10px);box-shadow:0 0 0 2px #fff,0 0 16px rgba(255,255,255,.6),0 6px 12px rgba(0,0,0,.4)}
+.credit{text-align:center;font-size:12px;font-weight:700;color:#cfe0ff;opacity:.7;padding:2px 0 6px}
 </style>
 </head>
 <body>
@@ -175,6 +179,7 @@ html,body,#app{background:#0b2147;animation:none}
   <div id="msg"></div>
   <div class="bar"><div class="ring" id="ring">25</div><span id="sides"></span><button id="drawBtn" class="hide">اسحب</button></div>
   <div id="hand"></div>
+  <div class="credit">تم إنشاء اللعبة بواسطة مينا عاطف</div>
 </div>
 
 <button class="g" id="snd" onclick="mute=!mute;this.textContent=mute?'🔇':'🔊'" style="position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));padding:6px 12px;z-index:4;font-size:18px">🔊</button>
@@ -186,6 +191,7 @@ html,body,#app{background:#0b2147;animation:none}
     <button class="g" onclick="netUI('host')">افتح غرفة (هوست)</button>
     <button class="g" onclick="netUI('guest')">انضم لغرفة</button>
     <p style="font-size:12px;opacity:.7">اللعب مع صاحبك: تبعتوا لبعض كود نسخ ولصق مرة واحدة بس. الأفضل تكونوا على نفس الواي فاي.</p>
+    <p style="font-size:14px;font-weight:700;margin:10px 0 0;color:#ffe08a">تم إنشاء اللعبة بواسطة مينا عاطف</p>
   </div>
 </div>
 
@@ -322,7 +328,7 @@ function render(v){
   if(v.rd===window._pr&&v.board.length>pb.length)ni=(!pb[0]||v.board[0][0]!==pb[0][0]||v.board[0][1]!==pb[0][1])?0:v.board.length-1;
   window._pb=v.board.map(t=>t.slice());window._pr=v.rd;
   const zone=(s,c)=>{const z=document.createElement('div');z.className='zone';z.textContent=c;z.onclick=()=>go(s);return z};
-  const two=sel&&v.cur===m&&v.rw<0&&v.board.length&&v.hand.some(x=>x[0]==sel[0]&&x[1]==sel[1])&&sidesFor(sel).length===2;
+  const two=sel&&v.cur===m&&v.rw<0&&v.board.length>1&&v.hand.some(x=>x[0]==sel[0]&&x[1]==sel[1])&&sidesFor(sel).length===2;
   if(two)bin.appendChild(zone(0,'◀'));
   v.board.forEach((t,i)=>{const e=tileEl(t,t[0]==t[1]);if(i===ni)e.classList.add('new');bin.appendChild(e)});
   if(two)bin.appendChild(zone(1,'▶'));
@@ -373,7 +379,8 @@ function sidesFor(t){return [0,1].filter(s=>{const L_=V.board[0]?.[0],R_=V.board
 function pick(t){
   if(!V||V.cur!==V.me||V.rw>=0)return;
   const s=sidesFor(t);if(!s.length)return;
-  if(s.length===1||!V.board.length){act(V.me,'play',t,s[0]);return}
+  // أول ورقة (الطاولة فاضية أو فيها ورقة واحدة): تتلعب على طول من غير اختيار الجهة
+  if(s.length===1||V.board.length<=1){act(V.me,'play',t,s[0]);return}
   sel=(sel&&sel[0]==t[0]&&sel[1]==t[1])?null:t;render(V);
 }
 function go(s){const t=sel;sel=null;if(t)act(V.me,'play',t,s)}
