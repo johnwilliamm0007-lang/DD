@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a1a33">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800&display=swap" rel="stylesheet">
@@ -111,6 +112,20 @@ button{font-weight:700;font-size:16px}
 @keyframes zin{from{transform:scale(.6);opacity:0}}
 .zone{flex:none;width:58px;height:58px;border-radius:14px;border:2px dashed #7fe3ff;background:rgba(127,227,255,.14);color:#aeeeff;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;animation:zin .22s ease-out,zpulse 1.4s ease-out infinite}
 .zone:active{background:rgba(127,227,255,.35)}
+/* ===== كارت الفوز ===== */
+.win{position:fixed;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;background:rgba(3,10,25,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.win .wc{position:relative;width:min(86vw,360px);text-align:center;padding:30px 24px 26px;border-radius:30px;background:linear-gradient(160deg,#1b4585,#0b2147 70%);border:2px solid rgba(255,214,102,.7);box-shadow:0 0 0 6px rgba(255,214,102,.12),0 24px 60px rgba(0,0,0,.6);animation:wpop .5s cubic-bezier(.2,.9,.3,1.2)}
+.win:not(.won) .wc{border-color:rgba(140,180,255,.4);box-shadow:0 24px 60px rgba(0,0,0,.6)}
+@keyframes wpop{from{transform:scale(.6) translateY(30px);opacity:0}}
+#wt{font-size:88px;line-height:1.1;animation:wfloat 2.2s ease-in-out infinite;filter:drop-shadow(0 8px 14px rgba(255,200,60,.45))}
+@keyframes wfloat{50%{transform:translateY(-8px) rotate(-4deg)}}
+#wh{font-size:32px;font-weight:800;margin-top:6px;background:linear-gradient(90deg,#ffe08a,#ffb347);-webkit-background-clip:text;background-clip:text;color:transparent}
+.win:not(.won) #wh{background:none;color:#cfe0ff}
+#ws{font-size:46px;font-weight:800;margin:4px 0 20px;letter-spacing:2px}
+#wb{width:100%;font-size:19px;padding:13px}
+#conf{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+#conf i{position:absolute;top:-16px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(560deg)}}
 </style>
 </head>
 <body>
@@ -127,6 +142,7 @@ button{font-weight:700;font-size:16px}
 </div>
 
 <button class="g" id="snd" onclick="mute=!mute;this.textContent=mute?'🔇':'🔊'" style="position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));padding:6px 12px;z-index:4;font-size:18px">🔊</button>
+<div id="win" class="win hide"><div id="conf"></div><div class="wc"><div id="wt">🏆</div><div id="wh"></div><div id="ws"></div><button id="wb" onclick="act(V.me,'again')"></button></div></div>
 <div id="menu">
   <div class="card">
     <h2>🁣 دومنو 1 ضد 1</h2>
@@ -154,7 +170,7 @@ button{font-weight:700;font-size:16px}
 <script>
 const $=s=>document.querySelector(s);
 const PIPS={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
-const TARGET=60, TURN=25;
+const TARGET=100, TURN=25;
 // ---------- رسم القطع ----------
 function half(n){const h=document.createElement('div');h.className='h';for(let i=0;i<9;i++){const c=document.createElement('div');if(PIPS[n].includes(i))c.className='d';h.appendChild(c)}return h}
 function tileEl(t,vert){const e=document.createElement('div');e.className='t'+(vert?' v':'');e.append(half(t[0]),half(t[1]));return e}
@@ -175,6 +191,7 @@ const has=p=>g.h[p].some(t=>can(t,0)||can(t,1));
 function blocked(){return !g.by.length&&!has(0)&&!has(1)}
 function act(p,type,t,s){
   if(mode==='guest'){ch.send(JSON.stringify({t:'a',type,tile:t,side:s}));return}
+  if(type==='again'){if(g&&g.mw>=0){g.sc=[0,0];newRound()}return}
   if(!g||g.rw>=0||g.cur!==p)return;
   if(type==='play'){
     const i=g.h[p].findIndex(x=>(x[0]==t[0]&&x[1]==t[1])||(x[0]==t[1]&&x[1]==t[0]));
@@ -288,12 +305,26 @@ function render(v){
   $('#drawBtn').textContent=v.by?'اسحب':'عدّي';
   $('#sides').innerHTML='';
   $('#msg').textContent=v.mw>=0?(v.mw===m?'🏆 كسبت الماتش!':'خسرت الماتش'):v.rw>=0?(v.rw===m?'كسبت الجولة 👏 الجولة الجاية بعد ثواني':'الخصم كسب الجولة'):(myTurn?'دورك':'دور الخصم...');
-  if(v.mw>=0&&mode!=='guest'){$('#sides').innerHTML='<button onclick="location.reload()">ماتش جديد</button>'}
+  showWin(v);
   const key=v.rd+'-'+v.board.length+'-'+v.by+'-'+v.cur+'-'+v.hand.length;
   if(key!==tk){tk=key;tleft=TURN;sel=null}
   clearInterval(tint);
   if(myTurn){tint=setInterval(()=>{tleft--;ring();if(tleft<=0){clearInterval(tint);auto()}},1000)}
   ring(myTurn);
+}
+let winShown=false;
+function confetti(){const c=$('#conf');c.innerHTML='';for(let i=0;i<44;i++){const s=document.createElement('i');s.style.cssText=`left:${Math.random()*100}%;background:hsl(${Math.random()*360},90%,60%);animation-delay:${Math.random()*.9}s;animation-duration:${1.9+Math.random()*1.6}s`;c.appendChild(s)}}
+function showWin(v){
+  const w=$('#win');
+  if(v.mw<0){w.classList.add('hide');winShown=false;return}
+  const won=v.mw===v.me;
+  $('#wt').textContent=won?'🏆':'💔';
+  $('#wh').textContent=won?'كسبت الجيم!':'الخصم كسب الجيم';
+  $('#ws').textContent=v.sc[v.me]+' : '+v.sc[1-v.me];
+  $('#wb').textContent=won?'كمّل 🔥':'جيم تاني';
+  w.className='win'+(won?' won':'');
+  if(won&&!winShown)confetti(); else if(!won)$('#conf').innerHTML='';
+  winShown=true;
 }
 function ring(on=true){const r=$('#ring');r.textContent=on?tleft:'-';r.classList.toggle('low',tleft<=8)}
 function sidesFor(t){return [0,1].filter(s=>{const L_=V.board[0]?.[0],R_=V.board[V.board.length-1]?.[1];return !V.board.length||(s==0?(t[0]==L_||t[1]==L_):(t[0]==R_||t[1]==R_))})}
@@ -319,9 +350,41 @@ async function pipe(bytes,S){const r=new Response(new Blob([bytes]).stream().pip
 const enc=async o=>b64u(await pipe(new TextEncoder().encode(JSON.stringify(o)),CompressionStream));
 const dec=async s=>JSON.parse(new TextDecoder().decode(await pipe(unb64u(s),DecompressionStream)));
 function waitIce(){return new Promise(r=>{if(pc.iceGatheringState==='complete')return r();pc.onicegatheringstatechange=()=>pc.iceGatheringState==='complete'&&r();setTimeout(r,4000)})}
+function linkBase(){return /^https?:/.test(location.protocol)&&!/claude|anthropic/.test(location.hostname)?location.href.split('#')[0]:BASE}
+function adapt(conn){
+  ch={send:s=>conn.send(s),get readyState(){return conn.open?'open':'closed'}};
+  hook();
+  conn.on('open',()=>ch.onopen&&ch.onopen());
+  conn.on('data',d=>ch.onmessage&&ch.onmessage({data:d}));
+  conn.on('close',()=>ch.onclose&&ch.onclose());
+  if(conn.open&&ch.onopen)ch.onopen();
+}
+// لينك مباشر: الصاحب يفتح اللينك فتبدأ اللعبة فوراً (PeerJS)
+function instantHost(){
+  if(!window.Peer)return Promise.resolve(false);
+  return new Promise(res=>{
+    let done=false;const fin=v=>{if(!done){done=true;res(v)}};
+    let peer;try{peer=new Peer()}catch(e){return fin(false)}
+    setTimeout(()=>fin(false),7000);
+    peer.on('error',()=>fin(false));
+    peer.on('open',id=>{
+      $('#out').value=linkBase()+'#r'+id;
+      $('#n1').textContent='ابعت اللينك ده لصاحبك، أول ما يفتحه اللعبة هتبدأ لوحده 👇';
+      fin(true);
+    });
+    peer.on('connection',conn=>{if(!ch)adapt(conn)});
+  });
+}
 async function netUI(role){
   $('#menu').classList.add('hide');$('#net').classList.remove('hide');
-  pc=new RTCPeerConnection(CFG);mode=role;
+  mode=role;
+  if(role==='host'){
+    $('#nt').textContent='افتح غرفة';$('#n1').textContent='جاري تجهيز اللينك...';$('#n2').textContent='';
+    $('#inp').classList.add('hide');$('#ok').classList.add('hide');
+    if(await instantHost())return;
+    $('#inp').classList.remove('hide');$('#ok').classList.remove('hide');
+  }
+  pc=new RTCPeerConnection(CFG);
   if(role==='host'){
     $('#nt').textContent='افتح غرفة';
     $('#n1').textContent='1) ابعت اللينك ده لصاحبك على واتساب';
@@ -359,6 +422,14 @@ function shareWA(){
 }
 (async()=>{
   const h=location.hash.slice(1);
+  if(h[0]==='r'&&h.length>10){
+    mode='guest';$('#menu').classList.add('hide');$('#msg').textContent='جاري الاتصال بالغرفة...';
+    if(!window.Peer){$('#msg').textContent='مش قادر يتصل بالغرفة';return}
+    const peer=new Peer();
+    peer.on('error',()=>{$('#msg').textContent='مش قادر يتصل بالغرفة، تأكد من اللينك'});
+    peer.on('open',()=>adapt(peer.connect(h.slice(1),{reliable:true})));
+    return;
+  }
   if(h[0]!=='o'||h.length<100)return;
   try{
     await netUI('guest');
