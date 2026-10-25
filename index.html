@@ -104,12 +104,18 @@ button.g{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(140,18
 .sb.me{border-color:rgba(255,214,102,.75);background:rgba(255,214,102,.08)}
 .sb.me b{color:#ffe08a}
 #wb{width:100%;font-size:20px;font-weight:800;padding:13px;margin-top:16px;color:#3a2600;border-radius:16px;background:linear-gradient(180deg,#ffe48f,#f5b836);box-shadow:0 4px 0 #b9821a,0 10px 18px rgba(0,0,0,.35)}
+#wm{width:100%;margin-top:10px;font-size:17px;padding:11px}
 #conf{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 #conf i{position:absolute;top:-16px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(105vh) rotate(560deg)}}
 /* ===== شاشة كاملة + لف الموبايل ===== */
 #fsb{position:fixed;left:66px;bottom:calc(12px + env(safe-area-inset-bottom));padding:6px 12px;z-index:4;font-size:18px}
 #snd{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));padding:6px 12px;z-index:4;font-size:18px}
+#mus,#nxt{position:fixed;bottom:calc(12px + env(safe-area-inset-bottom));padding:6px 12px;z-index:4;font-size:18px}
+#mus{left:120px}#nxt{left:174px}
+#mtoast{position:fixed;left:50%;bottom:calc(70px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9;max-width:92vw;background:#0b2147;border:1px solid #ffd666;border-radius:14px;padding:10px 16px;font-size:14px;font-weight:700;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#mtoast a{color:#ffd666;margin-inline-start:8px;white-space:nowrap}
+#mus.on{border-color:#ffd666;box-shadow:0 0 0 2px rgba(255,214,102,.6),0 4px 0 rgba(0,0,0,.35)}
 #rot{display:none;position:fixed;inset:0;z-index:30;background:#061430;align-items:center;justify-content:center;text-align:center;padding:30px;flex-direction:column;gap:10px}
 #rot .ic{font-size:70px;animation:rotp 2s ease-in-out infinite}
 #rot p{font-size:20px;font-weight:800;margin:0}
@@ -138,7 +144,7 @@ button.g{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(140,18
   #wt{font-size:46px}#wh{font-size:26px;margin-top:0}
   .sb b{font-size:30px}.sb{padding:6px}
   #wb{margin-top:10px;padding:9px;font-size:17px}
-  #fsb,#snd{padding:4px 10px;font-size:16px}
+  #fsb,#snd,#mus,#nxt{padding:4px 10px;font-size:16px}
   .mn{flex-direction:row;width:min(92vw,720px);gap:40px}
   .hero{flex:1}.acts{flex:1}
   .fan{height:96px}.fan .t{transform-origin:50% 100%}
@@ -163,8 +169,12 @@ button.g{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(140,18
 
 <button class="g" id="snd" onclick="mute=!mute;this.textContent=mute?'🔇':'🔊'">🔊</button>
 <button class="g" id="fsb" onclick="toggleFull()">⛶</button>
+<button class="g" id="mus" onclick="toggleMusic()" aria-label="الموسيقى">🎵</button>
+<button class="g hide" id="nxt" onclick="nextSong()" aria-label="الأغنية التالية">⏭</button>
+<iframe id="scp" title="music" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fmagdy-boshra-617387336%2Fsets%2Fewyp4prqlxmj&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_teaser=false" style="position:fixed;left:0;bottom:0;width:300px;height:166px;border:0;opacity:.01;pointer-events:none;z-index:0"></iframe>
+<div id="mtoast" class="hide"><span id="mtxt"></span> <a id="mlink" href="https://soundcloud.com/magdy-boshra-617387336/sets/ewyp4prqlxmj" target="_blank" rel="noopener">افتحها في ساوند كلاود</a></div>
 <div id="rot" onclick="this.classList.add('off')"><div class="ic">📱</div><p>لف الموبايل بالعرض عشان تلعب</p><small>أو اضغط في أي مكان للمتابعة</small></div>
-<div id="win" class="win hide"><div id="conf"></div><div class="wc"><div id="wt">🏆</div><div id="wh"></div><div id="wp"></div><div id="ws"></div><button id="wb" onclick="act(V.me,'again')"></button></div></div>
+<div id="win" class="win hide"><div id="conf"></div><div class="wc"><div id="wt">🏆</div><div id="wh"></div><div id="wp"></div><div id="ws"></div><button id="wb" onclick="act(V.me,'again')"></button><button id="wm" class="g hide" onclick="backToMenu()">القائمة الرئيسية</button></div></div>
 
 <div id="menu">
   <div class="mn">
@@ -174,8 +184,8 @@ button.g{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(140,18
       <p class="tag">1 ضد 1 · أول واحد يوصل 100 نقطة يكسب</p>
     </div>
     <div class="acts">
-      <button class="mb pri" onclick="startBot()">العب ضد الكمبيوتر<small>ابدأ فورًا من غير انتظار</small></button>
-      <button class="mb sec" onclick="openOnlineLobby()">🌐 العب أونلاين<small>اتحدى لاعب متصل دلوقتي</small></button>
+      <button class="mb pri" onclick="startBot()">العب لوحدك<small>ابدأ فورًا ضد الكمبيوتر</small></button>
+      <button class="mb sec" onclick="openOnlineLobby()">🌐 العب مع صحبك<small>اتحدى صاحبك وهو متصل دلوقتي</small></button>
       <button id="inst" class="hide" onclick="installApp()">📲 ثبّت اللعبة على موبايلك</button>
       <p class="by" style="text-align:center">تم إنشاء اللعبة بواسطة مينا عاطف</p>
     </div>
@@ -186,10 +196,12 @@ button.g{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(140,18
   <div class="card" style="max-width:520px;margin:4vh auto;text-align:right">
     <h2 style="text-align:center">🌐 اللاعبين أونلاين</h2>
     <p id="onlineStatus" style="text-align:center;font-size:13px">جاري الاتصال...</p>
-    <label for="onlineName">اسمك داخل اللعبة</label>
-    <input id="onlineName" maxlength="18" placeholder="اكتب اسمك" style="width:100%;padding:12px;border-radius:10px;border:1px solid #456;background:#0b2147;color:white;margin:8px 0">
-    <button class="g" style="width:100%" onclick="saveOnlineName()">حفظ الاسم</button>
-    <div style="height:1px;background:#ffffff2b;margin:14px 0"></div>
+    <div id="nameBox" class="hide">
+      <label for="onlineName">اسمك داخل اللعبة (مرة واحدة بس، مش هتقدر تغيره بعد كده)</label>
+      <input id="onlineName" maxlength="18" placeholder="اكتب اسمك" style="width:100%;padding:12px;border-radius:10px;border:1px solid #456;background:#0b2147;color:white;margin:8px 0">
+      <button style="width:100%" onclick="saveOnlineName()">حفظ الاسم والدخول</button>
+      <div style="height:1px;background:#ffffff2b;margin:14px 0"></div>
+    </div>
     <h3>اللاعبون المتصلون</h3>
     <div id="onlinePlayersList"><p>جاري تحميل اللاعبين...</p></div>
     <div style="height:1px;background:#ffffff2b;margin:14px 0"></div>
@@ -238,6 +250,7 @@ function newRound(){
   for(let i=by.length-1;i>0;i--){const k=Math.floor(Math.random()*(i+1));[by[i],by[k]]=[by[k],by[i]]}
   const h=[by.splice(0,7),by.splice(0,7)];
   let best=-1,st=0;h.forEach((hh,p)=>hh.forEach(t=>{const s=t[0]==t[1]?100+t[0]:t[0]+t[1];if(s>best){best=s;st=p}}));
+  if(g&&g.rw>=0)st=g.rw;
   g={by,h,board:[],ci:0,cur:st,sc:g?g.sc:[0,0],rd:g?g.rd+1:1,rw:-1,mw:-1,pts:0,drawing:false};
   push();botMaybe();
 }
@@ -436,7 +449,7 @@ function showWin(v){
   $('#wh').textContent=match?(won?'كسبت الجيم!':'خسرت الجيم'):(won?'كسبت الجولة!':'خسرت الجولة');
   $('#wp').textContent=match?'':(won?'+'+v.pts+' نقطة ليك':'+'+v.pts+' نقطة للخصم')+' · الجولة الجاية بعد ثواني';
   $('#ws').innerHTML=`<div class="sb me"><small>أنت</small><b>${v.sc[v.me]}</b></div><span class="sep">:</span><div class="sb"><small>الخصم</small><b>${v.sc[1-v.me]}</b></div>`;
-  $('#wb').textContent=won?'كمّل 🔥':'جيم تاني 🔥';$('#wb').classList.toggle('hide',!match);
+  $('#wb').textContent=won?'كمّل 🔥':'جيم تاني 🔥';$('#wb').classList.toggle('hide',!match);$('#wm').classList.toggle('hide',!match);
   w.className='win'+(won?' won':'');
   if(match&&won&&!winShown)confetti(); else if(!(match&&won))$('#conf').innerHTML='';
   winShown=true;
@@ -456,10 +469,61 @@ function auto(){
   act(V.me,'draw');
 }
 $('#drawBtn').onclick=()=>act(V.me,'draw');
+// ---------- الموسيقى (SoundCloud) ----------
+let sc=null,scReady=false,scLoading=false,scN=0,musOn=false,mtt=null;
+function mToast(t,link){
+  $('#mtxt').textContent=t;$('#mlink').classList.toggle('hide',!link);
+  $('#mtoast').classList.remove('hide');clearTimeout(mtt);mtt=setTimeout(()=>$('#mtoast').classList.add('hide'),8000);
+}
+function musOff(){musOn=false;$('#mus').classList.remove('on');$('#nxt').classList.add('hide')}
+function initSC(){
+  if(sc||!window.SC||!SC.Widget)return;
+  try{
+    sc=SC.Widget($('#scp'));
+    sc.bind(SC.Widget.Events.READY,()=>{
+      scReady=true;try{sc.setVolume(70)}catch(e){}
+      sc.getSounds(a=>{scN=(a||[]).length});
+    });
+    sc.bind(SC.Widget.Events.ERROR,()=>{musOff();mToast('الأغنية ما اشتغلتش. اتأكد إن الـ Playlist عامة (Public).',true)});
+    sc.bind(SC.Widget.Events.FINISH,()=>{
+      sc.getCurrentSoundIndex(i=>{if(scN&&i>=scN-1){sc.skip(0);sc.play()}});
+    });
+  }catch(e){console.error(e)}
+}
+function loadSC(){
+  if(sc||scLoading)return;
+  if(window.SC&&SC.Widget){initSC();return}
+  scLoading=true;
+  const t=document.createElement('script');t.src='https://w.soundcloud.com/player/api.js';
+  t.onload=()=>{scLoading=false;initSC()};
+  t.onerror=()=>{scLoading=false;mToast('مش قادر أحمّل ساوند كلاود، افحص الإنترنت.',true)};
+  document.head.appendChild(t);
+}
+function toggleMusic(){
+  if(!sc||!scReady){loadSC();mToast('ساوند كلاود لسه بيتحمّل... دوس تاني بعد ثانيتين.',false);return}
+  musOn=!musOn;
+  $('#mus').classList.toggle('on',musOn);$('#nxt').classList.toggle('hide',!musOn);
+  try{musOn?sc.play():sc.pause()}catch(e){musOff()}
+}
+function nextSong(){
+  if(!sc||!scReady)return;
+  sc.getCurrentSoundIndex(i=>{if(scN&&i>=scN-1)sc.skip(0);else sc.next()});
+}
+addEventListener('load',loadSC);
 // ---------- أوضاع اللعب ----------
 function startBot(){$('#menu').classList.add('hide');mode='bot';bot=true;me=0;g=null;newRound()}
+function backToMenu(){
+  clearInterval(tint);
+  if(ch){try{ch.onclose=null;ch.close&&ch.close()}catch(e){}}
+  ch=null;mode=null;bot=false;g=null;V=null;sel=null;
+  window._pb=[];window._pr=0;window._pr2=0;window._ph=null;lastRd=0;lastRw=-1;winShown=false;tk='';
+  $('#win').classList.add('hide');$('#conf').innerHTML='';
+  $('#bin').innerHTML='';$('#bin').style.cssText='';$('#hand').innerHTML='';$('#opp').innerHTML='';
+  $('#msg').textContent='';$('#oppname').textContent='الخصم';$('#score').textContent='أنت 0 : 0 الخصم';
+  $('#menu').classList.remove('hide');
+}
 function adapt(conn){
-  ch={send:s=>conn.send(s),get readyState(){return conn.open?'open':'closed'}};
+  ch={send:s=>conn.send(s),close:()=>conn.close(),get readyState(){return conn.open?'open':'closed'}};
   hook();
   conn.on('open',()=>ch.onopen&&ch.onopen());
   conn.on('data',d=>ch.onmessage&&ch.onmessage({data:d}));
@@ -469,7 +533,7 @@ function adapt(conn){
 function hook(){
   ch.onopen=()=>{$('#onlineLobby').classList.add('hide');$('#oppname').textContent=window.onlineOpponentName||'صاحبك';
     if(mode==='host'){me=0;bot=false;g=null;newRound()}else me=1};
-  ch.onclose=()=>{$('#msg').textContent='الاتصال اتقطع';ch=null};
+  ch.onclose=()=>{$('#msg').textContent='الاتصال اتقطع، راجع للقائمة...';ch=null;setTimeout(()=>{if(!ch&&mode!=='bot')backToMenu()},2500)};
   ch.onmessage=e=>{
     try{const m=JSON.parse(e.data);
       if(m.t==='s')render(m.v);
@@ -526,15 +590,21 @@ function initOnlineFirebase(){
 }
 async function openOnlineLobby(){
   $('#menu').classList.add('hide');$('#onlineLobby').classList.remove('hide');
-  $('#onlineName').value=onlineName;lobbyStatus('جاري الاتصال بخدمة الأونلاين...');
+  if(!localStorage.getItem('domino_online_name')){
+    $('#nameBox').classList.remove('hide');$('#onlineName').value='';
+    lobbyStatus('اكتب اسمك الأول عشان تظهر للاعبين');return;
+  }
+  $('#nameBox').classList.add('hide');onlineName=localStorage.getItem('domino_online_name');
+  lobbyStatus('جاري الاتصال بخدمة الأونلاين...');
   await initOnlineFirebase();
 }
 function closeOnlineLobby(){$('#onlineLobby').classList.add('hide');$('#menu').classList.remove('hide')}
 async function saveOnlineName(){
   const v=$('#onlineName').value.trim().slice(0,18);if(!v){alert('اكتب اسمًا الأول');return}
   onlineName=v;localStorage.setItem('domino_online_name',v);
-  if(fbUser&&onlinePeerId)await fbDB.ref('onlinePlayers/'+fbUser.uid).update({name:v,peerId:onlinePeerId,status:'online',updatedAt:firebase.database.ServerValue.TIMESTAMP});
-  lobbyStatus('تم حفظ الاسم');renderOnlinePlayers();
+  $('#nameBox').classList.add('hide');
+  lobbyStatus('جاري الاتصال بخدمة الأونلاين...');
+  await initOnlineFirebase();
 }
 function renderOnlinePlayers(){
   const box=$('#onlinePlayersList');if(!box)return;
