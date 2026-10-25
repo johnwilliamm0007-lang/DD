@@ -126,6 +126,39 @@ button{font-weight:700;font-size:16px}
 #conf{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 #conf i{position:absolute;top:-16px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(105vh) rotate(560deg)}}
+/* ===== طاولة كحلي + خلفية قوية ===== */
+html,body{background:#06194a}
+#app{background:
+ radial-gradient(620px 420px at 12% 6%,rgba(0,210,255,.5),transparent 62%),
+ radial-gradient(720px 520px at 92% 96%,rgba(130,80,255,.55),transparent 62%),
+ radial-gradient(circle,rgba(255,255,255,.1) 2px,transparent 2.6px) 0 0/36px 36px,
+ linear-gradient(160deg,#1046a8 0%,#0a2c75 48%,#061a4f 100%);
+ animation:dots 40s linear infinite}
+@keyframes dots{to{background-position:0 0,0 0,36px 36px,0 0}}
+#board{background:repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0 2px,transparent 2px 9px),radial-gradient(ellipse at 50% 45%,#0f2d5e 0%,#081a38 75%);border:2px solid rgba(255,214,102,.6);box-shadow:inset 0 0 50px rgba(0,0,0,.6),0 0 0 6px rgba(6,20,52,.55),0 14px 34px rgba(0,0,0,.5)}
+.t{box-shadow:0 1px 0 #fff inset,0 -3px 0 rgba(0,0,0,.08) inset,0 6px 12px rgba(0,0,0,.65)}
+.zone{border-color:#ffd666;color:#ffe9a8;background:rgba(255,214,102,.12)}
+@keyframes zpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,214,102,.55)}50%{box-shadow:0 0 0 10px rgba(255,214,102,0)}}
+/* ===== لون واحد: كحلي ===== */
+html,body,#app{background:#0b2147;animation:none}
+#board{background:#0b2147;border:2px solid #1c4180;box-shadow:none}
+.zone{border-color:#a9c8ff;color:#d6e6ff;background:rgba(169,200,255,.1)}
+@keyframes zpulse{0%,100%{box-shadow:0 0 0 0 rgba(169,200,255,.5)}50%{box-shadow:0 0 0 10px rgba(169,200,255,0)}}
+.card,.win .wc{background:#0b2147;border:1px solid #1c4180;box-shadow:0 20px 50px rgba(0,0,0,.55)}
+.win:not(.won) .wc{border-color:#1c4180}
+/* ===== كروت ثابتة وهادية ===== */
+.t{background:#e4e0d4;border:1px solid #cbc5b3;box-shadow:0 3px 8px rgba(0,0,0,.35)}
+.t::after{background:#b3ab95;box-shadow:none}
+.d{background:#2b303b;box-shadow:none}
+.h+.h{border-left-color:#c8c2af}
+.t.v .h+.h,#hand .t .h+.h{border-top-color:#c8c2af}
+.back{background:#1c3a6e;border-color:#12284d;box-shadow:none}
+#hand .t.ok{animation:none;transform:translateY(-8px);box-shadow:0 0 0 2px #9fc3ff,0 6px 12px rgba(0,0,0,.4)}
+#hand .t.sel{animation:none;transform:translateY(-10px);box-shadow:0 0 0 2px #fff,0 6px 12px rgba(0,0,0,.4)}
+.zone{animation:zin .22s ease-out}
+/* ===== السلسلة تلف على صفوف بدل السكرول ===== */
+#board{overflow-x:hidden;overflow-y:auto;align-items:flex-start;min-height:0;scrollbar-width:thin;scroll-behavior:auto}
+#board .in{flex-wrap:wrap;justify-content:center;align-items:center;margin:auto;gap:10px 6px;max-width:100%}
 </style>
 </head>
 <body>
@@ -290,7 +323,10 @@ function render(v){
   if(two)bin.appendChild(zone(0,'◀'));
   v.board.forEach((t,i)=>{const e=tileEl(t,t[0]==t[1]);if(i===ni)e.classList.add('new');bin.appendChild(e)});
   if(two)bin.appendChild(zone(1,'▶'));
-  const b=$('#board');b.scrollLeft=(b.scrollWidth-b.clientWidth)/2;
+  const b=$('#board');
+  bin.style.zoom=v.board.length>20?.62:v.board.length>14?.74:v.board.length>9?.88:1;
+  const nt=bin.querySelector('.new')||bin.querySelector('.zone');
+  if(nt){const r=nt.getBoundingClientRect(),br=b.getBoundingClientRect();if(r.bottom>br.bottom)b.scrollTop+=r.bottom-br.bottom+10;else if(r.top<br.top)b.scrollTop-=br.top-r.top+10}
   const hand=$('#hand');hand.innerHTML='';
   const myTurn=v.cur===m&&v.rw<0;
   const L_=v.board.length?v.board[0][0]:-1,R_=v.board.length?v.board[v.board.length-1][1]:-1;
@@ -304,7 +340,7 @@ function render(v){
   $('#drawBtn').classList.toggle('hide',!(myTurn&&!any));
   $('#drawBtn').textContent=v.by?'اسحب':'عدّي';
   $('#sides').innerHTML='';
-  $('#msg').textContent=v.mw>=0?(v.mw===m?'🏆 كسبت الماتش!':'خسرت الماتش'):v.rw>=0?(v.rw===m?'كسبت الجولة 👏 الجولة الجاية بعد ثواني':'الخصم كسب الجولة'):(myTurn?'دورك':'دور الخصم...');
+  $('#msg').textContent=v.mw>=0?(v.mw===m?'🏆 كسبت الماتش!':'خسرت الماتش'):v.rw>=0?(v.rw===m?'كسبت الجولة 👏 الجولة الجاية بعد ثواني':'الخصم كسب الجولة'):(myTurn?(two?'اختار الجهة اللي عايزها ◀ ▶':'دورك'):'دور الخصم...');
   showWin(v);
   const key=v.rd+'-'+v.board.length+'-'+v.by+'-'+v.cur+'-'+v.hand.length;
   if(key!==tk){tk=key;tleft=TURN;sel=null}
@@ -318,11 +354,11 @@ function showWin(v){
   const w=$('#win');
   if(v.mw<0){w.classList.add('hide');winShown=false;return}
   const won=v.mw===v.me;
-  $('#wt').textContent=won?'🏆':'💔';
-  $('#wh').textContent=won?'كسبت الجيم!':'الخصم كسب الجيم';
+  $('#wt').textContent=won?'🏆':'🥈';
+  $('#wh').textContent=won?'كسبت الجيم!':'خسرت الجيم';
   $('#ws').textContent=v.sc[v.me]+' : '+v.sc[1-v.me];
-  $('#wb').textContent=won?'كمّل 🔥':'جيم تاني';
-  w.className='win'+(won?' won':'');
+  $('#wb').textContent=won?'كمّل 🔥':'جيم تاني 🔥';
+  w.className='win won';
   if(won&&!winShown)confetti(); else if(!won)$('#conf').innerHTML='';
   winShown=true;
 }
