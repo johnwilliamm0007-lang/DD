@@ -40,6 +40,34 @@ button.g{background:rgba(0,0,0,.4);color:#fff;border:1px solid rgba(255,255,255,
 .card button{display:block;width:100%;margin:8px 0}
 textarea{width:100%;height:90px;border-radius:10px;border:0;padding:8px;direction:ltr;font-size:11px}
 .hide{display:none!important}
+/* ===== تصميم جديد: أزرق فاتح ===== */
+html,body{background:#9fd3f7;color:#0b2a4a}
+#app{background:radial-gradient(900px 500px at 50% 0%,rgba(255,255,255,.75),transparent 70%),linear-gradient(165deg,#d9f0ff 0%,#a5d6f8 50%,#6db4ea 100%);padding-left:12px;padding-right:12px}
+.pill{background:rgba(255,255,255,.6);color:#0b2a4a;border:1px solid rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(20,80,140,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#oppname{color:#0b2a4a}
+.back{width:18px;height:40px;border-radius:5px;border:1px solid #0b2a4a;background:linear-gradient(145deg,#3a73b3,#123a6b);box-shadow:inset 0 0 0 2px rgba(255,255,255,.18),0 2px 4px rgba(0,0,0,.3)}
+#board{background:linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,.18));border:1px solid rgba(255,255,255,.85);border-radius:26px;box-shadow:inset 0 6px 18px rgba(30,100,170,.18),0 8px 24px rgba(20,80,140,.15);margin:4px 0}
+.t{position:relative;border-radius:10px;border:1px solid #a9a287;background:linear-gradient(160deg,#fffdf5 0%,#f3ecd8 60%,#e4dcc3 100%);box-shadow:0 1px 0 #fff inset,0 -3px 0 rgba(0,0,0,.08) inset,0 5px 10px rgba(10,50,100,.35)}
+.t::after{content:'';position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffeeb5,#b8862b);box-shadow:0 1px 2px rgba(0,0,0,.5);z-index:2}
+.h{width:38px;height:38px;padding:6px}
+.h+.h{border-left:2px solid #c3bca2}
+.t.v .h+.h,#hand .t .h+.h{border-left:0;border-top:2px solid #c3bca2}
+#hand .t .h{width:40px;height:40px}
+.d{width:8px;height:8px;background:radial-gradient(circle at 35% 30%,#555,#050505 65%);box-shadow:0 1px 1px rgba(255,255,255,.7)}
+#hand{gap:7px;padding:14px 0 10px}
+#hand .t{transition:transform .18s,box-shadow .18s}
+#hand .t.ok{outline:none;transform:translateY(-12px);box-shadow:0 0 0 3px #ff9f1c,0 12px 20px rgba(255,140,0,.45)}
+#hand .t.sel{outline:none;transform:translateY(-16px);box-shadow:0 0 0 3px #1e6fd9,0 12px 20px rgba(30,111,217,.5)}
+#msg{color:#0b3d73;font-size:17px;text-shadow:0 1px 0 rgba(255,255,255,.7)}
+button{background:linear-gradient(180deg,#3b8cf0,#1457b3);color:#fff;border-radius:14px;padding:11px 20px;box-shadow:0 4px 0 #0e3f82,0 8px 14px rgba(20,80,160,.35)}
+button:active{transform:translateY(2px);box-shadow:0 2px 0 #0e3f82}
+button.g{background:rgba(255,255,255,.75);color:#0b2a4a;border:1px solid #fff;box-shadow:0 4px 0 rgba(20,80,140,.25),0 8px 14px rgba(20,80,160,.2)}
+.ring{background:#fff;color:#0b2a4a;border:4px solid #3b8cf0;box-shadow:0 4px 10px rgba(20,80,160,.25)}
+.ring.low{border-color:#ff5d5d;color:#d62f2f}
+#menu,#net{background:rgba(40,100,170,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.card{background:rgba(255,255,255,.92);color:#0b2a4a;border:1px solid #fff;border-radius:24px;box-shadow:0 20px 50px rgba(10,50,100,.35)}
+.card h2{font-size:24px}
+textarea{border:1px solid #b9d6ee;background:#f4faff;color:#0b2a4a}
 </style>
 </head>
 <body>
@@ -70,10 +98,11 @@ textarea{width:100%;height:90px;border-radius:10px;border:0;padding:8px;directio
     <h2 id="nt"></h2>
     <p id="n1" style="font-size:13px"></p>
     <textarea id="out" readonly></textarea>
-    <button class="g" onclick="copyOut()">نسخ الكود</button>
+    <button onclick="shareWA()">📲 ابعت على واتساب</button>
+    <button class="g" onclick="copyOut()">نسخ اللينك</button>
     <p id="n2" style="font-size:13px"></p>
     <textarea id="inp" placeholder="الصق الكود هنا"></textarea>
-    <button onclick="applyIn()">تأكيد</button>
+    <button id="ok" onclick="applyIn()">تأكيد</button>
     <button class="g" onclick="location.reload()">رجوع</button>
   </div>
 </div>
@@ -187,38 +216,62 @@ $('#drawBtn').onclick=()=>act(V.me,'draw');
 // ---------- أوضاع اللعب ----------
 function startBot(){$('#menu').classList.add('hide');mode='bot';bot=true;me=0;g=null;newRound()}
 const CFG={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
-const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
-const dec=s=>JSON.parse(decodeURIComponent(escape(atob(s.trim()))));
+const BASE='https://claude.ai/artifact/GbomhGgY6HzHRN6rNpaGUK';
+const b64u=u=>btoa(String.fromCharCode(...u)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const unb64u=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+async function pipe(bytes,S){const r=new Response(new Blob([bytes]).stream().pipeThrough(new S('deflate-raw')));return new Uint8Array(await r.arrayBuffer())}
+const enc=async o=>b64u(await pipe(new TextEncoder().encode(JSON.stringify(o)),CompressionStream));
+const dec=async s=>JSON.parse(new TextDecoder().decode(await pipe(unb64u(s),DecompressionStream)));
 function waitIce(){return new Promise(r=>{if(pc.iceGatheringState==='complete')return r();pc.onicegatheringstatechange=()=>pc.iceGatheringState==='complete'&&r();setTimeout(r,4000)})}
 async function netUI(role){
   $('#menu').classList.add('hide');$('#net').classList.remove('hide');
   pc=new RTCPeerConnection(CFG);mode=role;
   if(role==='host'){
     $('#nt').textContent='افتح غرفة';
-    $('#n1').textContent='1) انسخ الكود ده وابعته لصاحبك';
-    $('#n2').textContent='2) الصق رده هنا واضغط تأكيد';
+    $('#n1').textContent='1) ابعت اللينك ده لصاحبك على واتساب';
+    $('#n2').textContent='2) لما يرد عليك، الصق رسالته هنا واضغط تأكيد';
     ch=pc.createDataChannel('d');hook();
     await pc.setLocalDescription(await pc.createOffer());await waitIce();
-    $('#out').value=enc(pc.localDescription);
+    $('#out').value=BASE+'#o'+await enc(pc.localDescription);
   }else{
     $('#nt').textContent='انضم لغرفة';
-    $('#n1').textContent='1) الصق كود صاحبك واضغط تأكيد';
-    $('#n2').textContent='2) هيظهر لك كود رد: ابعته له';
+    $('#n1').textContent='1) الصق لينك صاحبك واضغط تأكيد';
+    $('#n2').textContent='2) هيظهر لك لينك الرد: ابعته له';
     pc.ondatachannel=e=>{ch=e.channel;hook()};
   }
 }
+const tok=s=>{const m=s.match(/#?([oa][A-Za-z0-9_\-]{100,})/);return m&&m[1]};
+async function guestAnswer(d){
+  await pc.setRemoteDescription(d);
+  await pc.setLocalDescription(await pc.createAnswer());await waitIce();
+  $('#out').value=BASE+'#a'+await enc(pc.localDescription);
+}
 async function applyIn(){
   try{
-    const d=dec($('#inp').value);
-    if(mode==='host'){await pc.setRemoteDescription(d)}
-    else{
-      await pc.setRemoteDescription(d);
-      await pc.setLocalDescription(await pc.createAnswer());await waitIce();
-      $('#out').value=enc(pc.localDescription);
-    }
-  }catch(e){alert('الكود مش صحيح')}
+    const t=tok($('#inp').value);
+    const d=await dec(t.slice(1));
+    if(mode==='host')await pc.setRemoteDescription(d);
+    else await guestAnswer(d);
+  }catch(e){alert('اللينك مش صحيح')}
 }
-function copyOut(){const o=$('#out');o.select();navigator.clipboard?.writeText(o.value)}
+function copyOut(){const o=$('#out');o.select();try{navigator.clipboard.writeText(o.value)}catch(e){document.execCommand('copy')}}
+function shareWA(){
+  const u=$('#out').value;if(!u)return;
+  const txt=(mode==='host'?'تعالى نلعب دومنو 🎲 افتح اللينك:\n':'ده ردي، الصقه في اللعبة:\n')+u;
+  if(navigator.share){navigator.share({text:txt}).catch(()=>{})}
+  else window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+}
+(async()=>{
+  const h=location.hash.slice(1);
+  if(h[0]!=='o'||h.length<100)return;
+  try{
+    await netUI('guest');
+    $('#n1').textContent='جاري تجهيز الرد...';$('#n2').textContent='';
+    $('#inp').classList.add('hide');$('#ok').classList.add('hide');
+    await guestAnswer(await dec(h.slice(1)));
+    $('#n1').textContent='ابعت اللينك ده لصاحبك عشان تبدأوا اللعب 👇';
+  }catch(e){$('#n1').textContent='اللينك مش صحيح'}
+})();
 function hook(){
   ch.onopen=()=>{$('#net').classList.add('hide');$('#oppname').textContent='صاحبك';
     if(mode==='host'){me=0;bot=false;g=null;newRound()}else me=1};
