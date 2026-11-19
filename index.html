@@ -108,6 +108,9 @@ button.g{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(140,18
 #conf{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 #conf i{position:absolute;top:-16px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(105vh) rotate(560deg)}}
+/* ===== صورة الفوز / الخسارة ===== */
+#wimg{display:block;width:min(60vw,220px);max-height:30vh;object-fit:contain;margin:0 auto 6px;border-radius:18px}
+@media (orientation:landscape) and (max-height:520px){#wimg{max-height:36vh;width:auto;max-width:40vw}}
 /* ===== شاشة كاملة + لف الموبايل ===== */
 #fsb{position:fixed;left:66px;bottom:calc(12px + env(safe-area-inset-bottom));padding:6px 12px;z-index:4;font-size:18px}
 #snd{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));padding:6px 12px;z-index:4;font-size:18px}
@@ -174,7 +177,7 @@ button.g{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(140,18
 <iframe id="scp" title="music" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fmagdy-boshra-617387336%2Fsets%2Fewyp4prqlxmj&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_teaser=false" style="position:fixed;left:0;bottom:0;width:300px;height:166px;border:0;opacity:.01;pointer-events:none;z-index:0"></iframe>
 <div id="mtoast" class="hide"><span id="mtxt"></span> <a id="mlink" href="https://soundcloud.com/magdy-boshra-617387336/sets/ewyp4prqlxmj" target="_blank" rel="noopener">افتحها في ساوند كلاود</a></div>
 <div id="rot" onclick="this.classList.add('off')"><div class="ic">📱</div><p>لف الموبايل بالعرض عشان تلعب</p><small>أو اضغط في أي مكان للمتابعة</small></div>
-<div id="win" class="win hide"><div id="conf"></div><div class="wc"><div id="wt">🏆</div><div id="wh"></div><div id="wp"></div><div id="ws"></div><button id="wb" onclick="act(V.me,'again')"></button><button id="wm" class="g hide" onclick="backToMenu()">القائمة الرئيسية</button></div></div>
+<div id="win" class="win hide"><div id="conf"></div><div class="wc"><img id="wimg" class="hide" alt=""><div id="wt">🏆</div><div id="wh"></div><div id="wp"></div><div id="ws"></div><button id="wb" onclick="act(V.me,'again')"></button><button id="wm" class="g hide" onclick="backToMenu()">القائمة الرئيسية</button></div></div>
 
 <div id="menu">
   <div class="mn">
@@ -439,11 +442,23 @@ function render(v){
 }
 let winShown=false;
 function confetti(){const c=$('#conf');c.innerHTML='';for(let i=0;i<44;i++){const s=document.createElement('i');s.style.cssText=`left:${Math.random()*100}%;background:hsl(${Math.random()*360},90%,60%);animation-delay:${Math.random()*.9}s;animation-duration:${1.9+Math.random()*1.6}s`;c.appendChild(s)}}
+// ---------- صور الفوز / الخسارة ----------
+const WIN_IMGS=['win1.webp','win2.webp'],LOSE_IMGS=['lose1.webp','lose2.webp'];
+[...WIN_IMGS,...LOSE_IMGS].forEach(s=>{new Image().src=s});
+function setResultImg(won,key){
+  if(window._wk===key)return;
+  window._wk=key;
+  const im=$('#wimg'),l=won?WIN_IMGS:LOSE_IMGS;
+  im.onload=()=>{im.classList.remove('hide');$('#wt').classList.add('hide')};
+  im.onerror=()=>{im.classList.add('hide');$('#wt').classList.remove('hide')};
+  im.src=l[Math.floor(Math.random()*l.length)];
+}
 function showWin(v){
   const w=$('#win');
   if(v.rw<0){w.classList.add('hide');winShown=false;return}
   const match=v.mw>=0;
   const won=(match?v.mw:v.rw)===v.me;
+  setResultImg(won,v.rd+'-'+(match?'m':'r'));
   w.onclick=()=>{if(V&&V.mw<0)w.classList.add('hide')};
   $('#wt').textContent=match?(won?'🏆':'😔'):(won?'🎉':'💪');
   $('#wh').textContent=match?(won?'كسبت الجيم!':'خسرت الجيم'):(won?'كسبت الجولة!':'خسرت الجولة');
@@ -516,7 +531,7 @@ function backToMenu(){
   clearInterval(tint);
   if(ch){try{ch.onclose=null;ch.close&&ch.close()}catch(e){}}
   ch=null;mode=null;bot=false;g=null;V=null;sel=null;
-  window._pb=[];window._pr=0;window._pr2=0;window._ph=null;lastRd=0;lastRw=-1;winShown=false;tk='';
+  window._pb=[];window._pr=0;window._pr2=0;window._ph=null;lastRd=0;lastRw=-1;winShown=false;tk='';window._wk=null;
   $('#win').classList.add('hide');$('#conf').innerHTML='';
   $('#bin').innerHTML='';$('#bin').style.cssText='';$('#hand').innerHTML='';$('#opp').innerHTML='';
   $('#msg').textContent='';$('#oppname').textContent='الخصم';$('#score').textContent='أنت 0 : 0 الخصم';
