@@ -443,7 +443,19 @@ function render(v){
 let winShown=false;
 function confetti(){const c=$('#conf');c.innerHTML='';for(let i=0;i<44;i++){const s=document.createElement('i');s.style.cssText=`left:${Math.random()*100}%;background:hsl(${Math.random()*360},90%,60%);animation-delay:${Math.random()*.9}s;animation-duration:${1.9+Math.random()*1.6}s`;c.appendChild(s)}}
 // ---------- صور الفوز / الخسارة ----------
-const WIN_IMGS=['win1.webp','win2.webp'],LOSE_IMGS=['lose1.webp','lose2.webp'];
+const WIN_COUNT=2, LOSE_COUNT=2; // غيّر الرقمين حسب عدد صورك
+const mkImgs=(p,n)=>Array.from({length:n},(_,i)=>p+(i+1)+'.webp');
+const WIN_IMGS=mkImgs('win',WIN_COUNT), LOSE_IMGS=mkImgs('lose',LOSE_COUNT);
+const imgBags={};
+function nextImg(list,k){
+  if(!imgBags[k]||!imgBags[k].length){
+    const b=[...list];
+    for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}
+    if(imgBags[k+'_last']&&b.length>1&&b[b.length-1]===imgBags[k+'_last']){[b[0],b[b.length-1]]=[b[b.length-1],b[0]]}
+    imgBags[k]=b;
+  }
+  const s=imgBags[k].pop();imgBags[k+'_last']=s;return s;
+}
 [...WIN_IMGS,...LOSE_IMGS].forEach(s=>{new Image().src=s});
 function setResultImg(won,key){
   if(window._wk===key)return;
@@ -451,8 +463,7 @@ function setResultImg(won,key){
   const im=$('#wimg'),l=won?WIN_IMGS:LOSE_IMGS;
   im.onload=()=>{im.classList.remove('hide');$('#wt').classList.add('hide')};
   im.onerror=()=>{im.classList.add('hide');$('#wt').classList.remove('hide')};
-  im.src=l[Math.floor(Math.random()*l.length)];
-}
+im.src=nextImg(l,won?'w':'l');}
 function showWin(v){
   const w=$('#win');
   if(v.rw<0){w.classList.add('hide');winShown=false;return}
