@@ -1,5 +1,9 @@
-const C='domino-v2';
-const FILES=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','win1.webp','win2.webp','lose1.webp','lose2.webp'];
+const C='domino-v3';
+const WIN_COUNT=6, LOSE_COUNT=6; // نفس الأرقام اللي في index.html
+const IMGS=[];
+for(let i=1;i<=WIN_COUNT;i++)IMGS.push('win'+i+'.webp');
+for(let i=1;i<=LOSE_COUNT;i++)IMGS.push('lose'+i+'.webp');
+const FILES=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png',...IMGS];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(FILES)));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))));self.clients.claim()});
 self.addEventListener('fetch',e=>{
