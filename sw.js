@@ -1,4 +1,4 @@
-const C='domino-v3';
+const C='domino-v4';
 const WIN_COUNT=6, LOSE_COUNT=6; // نفس الأرقام اللي في index.html
 const IMGS=[];
 for(let i=1;i<=WIN_COUNT;i++)IMGS.push('win'+i+'.webp');
